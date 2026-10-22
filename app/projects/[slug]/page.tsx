@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getProject, projects } from '@/lib/projects'
 import StatusBadge from '@/components/StatusBadge'
@@ -50,6 +51,12 @@ export default async function ProjectCaseStudy({
         {project.title}
       </h1>
       <p className="mt-4 text-lg leading-relaxed text-ink-muted">{project.oneLiner}</p>
+
+      {project.slug === 'ai-ops-triage-copilot' && (
+        <Link href="/tools/triage-copilot" className="btn-primary mt-6 inline-flex">
+          Try the live tool
+        </Link>
+      )}
 
       {isPlanned && (
         <div className="mt-8 rounded-md border border-status-progress/40 bg-status-progress/5 p-4 text-sm text-ink">
