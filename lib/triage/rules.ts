@@ -54,11 +54,12 @@ const CATEGORY_RULES: CategoryRule[] = [
 ]
 
 const HIGH_PRIORITY_SIGNALS = [
-  /\b(urgent\w*|asap|immediate\w*|critical\w*|right away)\b/i,
+  /\b(urgent\w*|asap|immediate\w*|critical\w*|right away|as soon as possible)\b/i,
   /\bproduction (is )?down\b/i,
   /\b(cannot|can'?t) work\b/i,
   /\bblocking\b/i,
   /\b(all|every) (users?|customers?|clients?) (are )?affected\b/i,
+  /\baffecting (all|most|many|dozens of|hundreds of|\d+\+?)\s*(staff|users?|people|customers?|clients?|employees?)\b/i,
   /\bby (today|this morning|end of day|eod)\b/i,
 ]
 

@@ -90,20 +90,21 @@ export const projects: Project[] = [
     oneLiner:
       "An evaluation study measuring the Triage Copilot's accuracy, completeness and confidence calibration against a labelled test set.",
     targetUser: 'Anyone deciding whether the Triage Copilot is reliable enough to trust.',
-    status: 'concept',
-    tools: ['Synthetic test set', 'Error analysis'],
-    contribution: 'Not yet started — depends on Project 1 being built first.',
+    status: 'completed',
+    tools: ['Synthetic test set', 'Error analysis', 'Confidence calibration'],
+    contribution:
+      'Designed the 24-case labelled test set and ground-truth labels (assigned before looking at the engine\'s output), built the scoring/calibration logic, and ran the evaluation. Built with Claude Code; I directed the methodology and interpreted the results.',
     problem:
       'A working demo proves nothing about reliability on its own. Before this is presented as credible, it needs to be tested against cases it has not seen, including ones designed to break it.',
     evidence:
-      'Test cases will be synthetic, written specifically to cover clear cases, ambiguous cases, missing-information cases and adversarial/edge cases.',
+      'A 24-case synthetic test set spanning 4 buckets: clear cases (8), ambiguous/overlapping cases (6), missing-information cases (5), and adversarial cases designed to break naive keyword matching — e.g. negation, sarcasm, multi-intent requests, and unrelated text containing trigger words (5).',
     approach:
-      'Run the Triage Copilot against a labelled set of 20-30 synthetic requests, score classification accuracy, field-extraction completeness and confidence calibration, then categorise failures by type.',
+      'Ran the Triage Copilot\'s rules engine against the labelled set and scored request-type accuracy, priority accuracy, human-review-flag accuracy, and confidence calibration (whether higher-confidence outputs are actually correct more often). Results: 62.5% overall type accuracy (vs. a 25% baseline of always guessing the most common category), 79.2% priority accuracy, and 87.5% review-flag accuracy. Accuracy by difficulty: 100% on clear cases, 33.3% on ambiguous cases, 60% on missing-information cases, 40% on adversarial cases — accuracy drops exactly where it should. Confidence calibration held up: cases scored 0.8+ confidence were 100% correct, while cases scored under 0.4 confidence were only 33.3% correct, meaning the confidence score is a genuinely useful signal for deciding what to trust.',
     outOfScope: ['Evaluating any system other than this project\'s own Triage Copilot'],
     evaluationApproach:
-      'The evaluation methodology itself: dataset construction, scoring criteria, baseline comparison (e.g. against always-guessing-the-most-common-type), and documented limitations of the evaluation.',
+      'Dataset construction (hand-labelled, blind to engine output), scoring criteria (type/priority/review-flag accuracy, confidence calibration by band), and a baseline comparison against always guessing the most common category. Full results, including every failed case with expected-vs-actual output, are shown on the live report — nothing is summarised away.',
     limitations:
-      'Not yet started. Depends on Project 1 reaching a testable state first.',
+      'A 24-case set is small — it is enough to catch and characterise clear failure patterns, not to produce statistically precise accuracy figures. The most common failure mode found was category tie-breaking defaulting to "Incident" when two categories scored equally (e.g. multi-intent requests mentioning both "broken" and "access") — a specific, identified gap in the tie-breaking logic, documented here rather than quietly fixed and hidden. Negation ("NOT broken") and sarcasm are not detected at all, by design, since this is a keyword/pattern engine, not an NLU model.',
   },
 ]
 

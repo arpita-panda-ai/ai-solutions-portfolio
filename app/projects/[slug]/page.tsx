@@ -62,6 +62,11 @@ export default async function ProjectCaseStudy({
           Try the scorecard
         </Link>
       )}
+      {project.slug === 'triage-copilot-evaluation' && (
+        <Link href="/tools/triage-eval-report" className="btn-primary mt-6 inline-flex">
+          View the live evaluation report
+        </Link>
+      )}
 
       {isPlanned && (
         <div className="mt-8 rounded-md border border-status-progress/40 bg-status-progress/5 p-4 text-sm text-ink">
