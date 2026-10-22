@@ -62,25 +62,26 @@ export const projects: Project[] = [
       'A structured scorecard that assesses whether a team is actually ready to adopt an AI workflow before budget is committed.',
     targetUser:
       'Operations and transformation leaders at mid-size companies deciding whether to fund an AI pilot.',
-    status: 'concept',
-    tools: ['Product research', 'PRD', 'Scoring framework', 'Prototype (planned)'],
+    status: 'prototype',
+    tools: ['Product framing', 'Weighted scoring framework', 'Next.js prototype'],
     contribution:
-      'Not yet built. Scope defined; research, PRD and prototype to follow in a later phase.',
+      'Problem framing, scorecard design (categories, weights, questions, recommendations), and the interactive prototype. Built with Claude Code; I directed the scope, scoring logic and content.',
     problem:
       'Many AI pilots are funded and built, then never reach production or get abandoned after launch, often because the team was not actually ready: unclear ownership, poor data quality, no plan for human review, or no way to tell if it is working.',
     evidence:
-      'Published industry research on AI pilot failure rates (McKinsey, BCG and Gartner reporting on the gap between AI pilots and production adoption) will be cited directly, with sources, rather than restated as unsourced claims.',
+      'Published industry research on AI pilot failure rates (McKinsey, BCG and Gartner reporting on the gap between AI pilots and production adoption) describes this as a widespread pattern. This prototype does not cite specific statistics from that research in its outputs — the scoring logic below is my own framework, not a reproduction of any named study\'s methodology.',
     approach:
-      'A weighted scorecard across process maturity, data quality, change-readiness and evaluation capability, plus a short written product brief: target user, competitive landscape, PRD, prioritisation, a simple prototype or clickable workflow, and an MVP roadmap.',
+      'A weighted scorecard across four categories — process maturity, data quality & availability, change readiness, and evaluation & monitoring capability (12 questions total) — producing an overall readiness score, a tier (Ready to pilot / Ready with conditions / Not ready yet), and a flagged biggest-risk category with a concrete recommendation. The underlying weights and thresholds are a transparent, documented judgment call, not a validated scientific model — see Limitations.',
     outOfScope: [
-      'A production-grade scoring engine',
-      'Claims of adoption or usage by any real company',
+      'A production-grade or validated scoring engine',
+      'Claims of adoption or usage by any real company or team',
       'Integration with any specific company\'s systems',
+      'Competitive benchmarking against named commercial readiness-assessment products',
     ],
     evaluationApproach:
-      'This is a product/strategy artefact, not a measurable system. "Evaluation" here means internal consistency of the scoring logic and transparency about assumptions, not a performance metric.',
+      'This is a product/strategy artefact, not a predictive model. "Evaluation" here means internal consistency of the scoring logic (weights sum to 1, category math is transparent and auditable) and clarity about assumptions — not a performance metric validated against real outcomes.',
     limitations:
-      'Not yet started. This page will be updated once research and the prototype exist.',
+      'The category weights, question set and score thresholds are my own reasoned design, not derived from a validated dataset of real pilot outcomes — treat the output as a structured conversation-starter, not a certified verdict. It has not been tested against any real team\'s actual pilot outcome. A weighted average can hide a single catastrophic gap (e.g. data that does not exist at all, outweighed by strong scores elsewhere) — the scorecard deliberately overrides the tier in that case rather than reporting a falsely reassuring average; this was found and fixed during testing.',
   },
   {
     slug: 'triage-copilot-evaluation',

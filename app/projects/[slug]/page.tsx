@@ -57,6 +57,11 @@ export default async function ProjectCaseStudy({
           Try the live tool
         </Link>
       )}
+      {project.slug === 'ai-adoption-readiness-assessment' && (
+        <Link href="/tools/readiness-scorecard" className="btn-primary mt-6 inline-flex">
+          Try the scorecard
+        </Link>
+      )}
 
       {isPlanned && (
         <div className="mt-8 rounded-md border border-status-progress/40 bg-status-progress/5 p-4 text-sm text-ink">
