@@ -67,6 +67,16 @@ export default async function ProjectCaseStudy({
           Try the scorecard
         </Link>
       )}
+      {project.slug === 'requirements-qa' && (
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/tools/requirements-qa" className="btn-primary inline-flex">
+            Try the live tool
+          </Link>
+          <Link href="/tools/requirements-eval-report" className="btn-outline inline-flex">
+            View the live evaluation report
+          </Link>
+        </div>
+      )}
 
       {isPlanned && (
         <div className="mt-8 rounded-md border border-status-progress/40 bg-status-progress/5 p-4 text-sm text-ink">

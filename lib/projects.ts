@@ -83,6 +83,35 @@ export const projects: Project[] = [
     limitations:
       'The category weights, question set and score thresholds are my own reasoned design, not derived from a validated dataset of real pilot outcomes — treat the output as a structured conversation-starter, not a certified verdict. It has not been tested against any real team\'s actual pilot outcome. A weighted average can hide a single catastrophic gap (e.g. data that does not exist at all, outweighed by strong scores elsewhere) — the scorecard deliberately overrides the tier in that case rather than reporting a falsely reassuring average; this was found and fixed during testing.',
   },
+  {
+    slug: 'requirements-qa',
+    title: 'Requirements & User Story QA',
+    kind: 'Flagship application',
+    oneLiner:
+      'Reads a user story or requirement and flags exactly what a reviewer would flag before it reaches a sprint: ambiguous language, missing or untestable acceptance criteria, incomplete structure.',
+    targetUser:
+      'Business analysts and product owners reviewing user stories or requirements before they are accepted into a sprint or backlog.',
+    status: 'in-progress',
+    tools: ['Next.js', 'TypeScript', 'Rules-based NLP-lite pattern matching', 'Evaluation harness'],
+    contribution:
+      'Problem framing, the ambiguity/testability rule set, the evaluation test-set design and scoring, and the UI. Built with Claude Code; I directed the architecture, requirements and decisions.',
+    problem:
+      'Vague or incomplete requirements ("make it user-friendly", "handle errors appropriately") pass review, then cause rework, disputes about what "done" means, or untestable acceptance criteria discovered late. A first-pass, consistent check for ambiguity and testability — before a human reviewer spends time on it — catches a meaningful share of this early.',
+    evidence:
+      'Requirements-engineering literature (e.g. INCOSE\'s Guide for Writing Requirements, NASA\'s requirements guidance) maintains well-known lists of ambiguous terms and testability criteria precisely because this is a recurring, named problem in practice. This project uses synthetic example requirements, not real company data.',
+    approach:
+      'A rules-based engine (clearly labelled as pattern matching, not an LLM) reads a user story or plain requirement and returns: detected format, a list of specific issues (ambiguous terms, compound/bundled requirements, missing or untestable acceptance criteria, missing role or benefit for user stories, too-brief fragments) each with severity and an excerpt, a quality score, and a set of clarifying questions a BA could ask the stakeholder. Low-confidence or blocker-level outputs are explicitly flagged for human review.',
+    outOfScope: [
+      'Integration with a real backlog tool (Jira, Azure DevOps, etc.)',
+      'Automatically rewriting or "fixing" the requirement text',
+      'True natural-language understanding (semantic parsing, sarcasm, multi-sentence negation)',
+      'Training a custom NLP model',
+    ],
+    evaluationApproach:
+      'Tested against a 19-case synthetic, hand-labelled set (8 clear, 3 ambiguous, 4 missing-information, 4 adversarial) scored on four dimensions: format detection, acceptance-criteria detection, the human-review flag, and whether the expected issue types were found without false positives. Ground-truth labels were derived by tracing the engine\'s own rules against each case rather than from independent domain judgement, so this is closer to a thorough logic/regression check than a fully blind evaluation — see Limitations. That process still caught one genuine bug: a single line of ordinary prose starting with "When" was being misread as a one-line Gherkin acceptance-criteria block, swallowing the entire requirement and hiding it from every other check; this was fixed (restricting that heuristic to inputs with more than one line) before the final numbers below. Current results: 100% format accuracy, 100% acceptance-criteria detection accuracy, 100% review-flag accuracy, 100% issue-type accuracy, against a 57.9% baseline of always flagging everything for human review. Full methodology and the complete case list are on the live report linked above.',
+    limitations:
+      'Because the test set was built by tracing the engine\'s logic rather than independent blind labelling, the 100% scores mainly confirm the rules behave as designed, not that the design itself is complete — several deliberate, disclosed gaps remain. The curated ambiguous-term list (29 terms from standard requirements-engineering checklists) will miss vague words outside that list (e.g. "better", "nicer"). Acceptance-criteria lines written in Given/When/Then form are always treated as testable regardless of content, so a vague Gherkin step can still slip through. The compound-requirement check is a blunt "and"-counting smell detector — it flags legitimately well-specified multi-clause requirements and repetitive noise text alike, with no real parsing of whether the clauses are actually independent. An incomplete user-story fragment (e.g. "As a user" with no "I want") is not recognized as a user story at all. None of this is hidden — it is the honest ceiling of a keyword/pattern-based v1, not a trained model.',
+  },
 ]
 
 export function getProject(slug: string): Project | undefined {
