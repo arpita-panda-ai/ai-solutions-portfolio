@@ -21,7 +21,7 @@ export default function TriageEvalReport() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
-      <Link href="/projects/triage-copilot-evaluation" className="text-sm text-accent hover:underline">
+      <Link href="/projects/ai-ops-triage-copilot" className="text-sm text-accent hover:underline">
         ← Back to case study
       </Link>
       <h1 className="mt-4 font-serif text-3xl font-semibold text-ink sm:text-4xl">

@@ -53,18 +53,18 @@ export default async function ProjectCaseStudy({
       <p className="mt-4 text-lg leading-relaxed text-ink-muted">{project.oneLiner}</p>
 
       {project.slug === 'ai-ops-triage-copilot' && (
-        <Link href="/tools/triage-copilot" className="btn-primary mt-6 inline-flex">
-          Try the live tool
-        </Link>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/tools/triage-copilot" className="btn-primary inline-flex">
+            Try the live tool
+          </Link>
+          <Link href="/tools/triage-eval-report" className="btn-outline inline-flex">
+            View the live evaluation report
+          </Link>
+        </div>
       )}
       {project.slug === 'ai-adoption-readiness-assessment' && (
         <Link href="/tools/readiness-scorecard" className="btn-primary mt-6 inline-flex">
           Try the scorecard
-        </Link>
-      )}
-      {project.slug === 'triage-copilot-evaluation' && (
-        <Link href="/tools/triage-eval-report" className="btn-primary mt-6 inline-flex">
-          View the live evaluation report
         </Link>
       )}
 

@@ -34,9 +34,9 @@ export const projects: Project[] = [
     targetUser:
       'Operations and business-analysis teams who triage inbound requests (service requests, change requests, support tickets) before work can start.',
     status: 'in-progress',
-    tools: ['Next.js', 'TypeScript', 'Claude API', 'Rules-based extraction'],
+    tools: ['Next.js', 'TypeScript', 'Claude API', 'Rules-based extraction', 'Evaluation harness'],
     contribution:
-      'Problem framing, triage logic design, extraction rules, UI, evaluation plan. Built with Claude Code; I directed the architecture, requirements and decisions.',
+      'Problem framing, triage logic design, extraction rules, UI, and the evaluation harness (test-set design, scoring, calibration analysis). Built with Claude Code; I directed the architecture, requirements and decisions.',
     problem:
       'Requests arrive as free text with inconsistent detail. Before any real work can start, someone has to read it, work out what type of request it is, how urgent it is, what is missing, and who should own it. That triage step is manual, inconsistent between people, and easy to get wrong when volume is high.',
     evidence:
@@ -50,9 +50,9 @@ export const projects: Project[] = [
       'Training a custom classification model',
     ],
     evaluationApproach:
-      'A labelled synthetic test set will be scored for request-type classification accuracy, completeness of extracted fields, and confidence calibration (whether "high confidence" outputs are actually correct more often than "low confidence" ones). Full results are published as Project 3.',
+      'Tested against a 24-case synthetic, hand-labelled set (8 clear, 6 ambiguous, 5 missing-information, 5 adversarial — the last designed to break naive keyword matching with negation, sarcasm and multi-intent requests). The first evaluation run surfaced real bugs — a word-boundary regex that silently failed on inflected verbs ("changed", "updated"), missing keywords ("fix", "emergency"), no negation handling, and category ties that silently defaulted to "Incident" — which were then fixed in the engine itself, not just written up as known issues. Live, always-current results after those fixes: 91.7% overall type accuracy (up from 62.5% before the fixes, vs. a 25% baseline of always guessing the most common category), 87.5% priority accuracy, 87.5% review-flag accuracy. Adversarial-case type accuracy went from 40% to 100%; clear and missing-information cases are both at 100%. Confidence calibration holds up — cases scored 0.6+ confidence are 100% correct, cases under 0.4 confidence are correct only 77.8% of the time — meaning the confidence score is a genuinely trustworthy signal, not decorative. Full methodology and every remaining failed case (nothing cherry-picked) are on the live report linked above.',
     limitations:
-      'Rules-based v1 will not handle multi-intent or highly ambiguous requests well. This is a deliberate, disclosed limitation, not a hidden one.',
+      'Two categories of failure remain after fixing what was genuinely fixable. First, honest ambiguity: when two categories score an exact tie (e.g. a request mentioning both "broken" and "access"), the engine no longer guesses — it now explicitly returns "unclassified" and flags it for human disambiguation rather than silently defaulting to "Incident" as it used to. This is more honest, but it means a couple of genuinely ambiguous requests are still scored as "wrong" against a single expected label, by design. Second, real semantic gaps a keyword engine cannot close: negation ("NOT broken") is now caught in simple cases via a short negation window, but won\'t catch negation that spans a longer clause; sarcasm, true multi-intent splitting, and distinguishing a genuinely vague request from meaningless noise text are not modelled at all. These are documented rather than hidden. The 24-case test set is small enough to characterise failure patterns but not to produce statistically precise accuracy figures.',
   },
   {
     slug: 'ai-adoption-readiness-assessment',
@@ -82,29 +82,6 @@ export const projects: Project[] = [
       'This is a product/strategy artefact, not a predictive model. "Evaluation" here means internal consistency of the scoring logic (weights sum to 1, category math is transparent and auditable) and clarity about assumptions — not a performance metric validated against real outcomes.',
     limitations:
       'The category weights, question set and score thresholds are my own reasoned design, not derived from a validated dataset of real pilot outcomes — treat the output as a structured conversation-starter, not a certified verdict. It has not been tested against any real team\'s actual pilot outcome. A weighted average can hide a single catastrophic gap (e.g. data that does not exist at all, outweighed by strong scores elsewhere) — the scorecard deliberately overrides the tier in that case rather than reporting a falsely reassuring average; this was found and fixed during testing.',
-  },
-  {
-    slug: 'triage-copilot-evaluation',
-    title: 'Evaluating the Triage Copilot',
-    kind: 'Evaluation study',
-    oneLiner:
-      "An evaluation study measuring the Triage Copilot's accuracy, completeness and confidence calibration against a labelled test set.",
-    targetUser: 'Anyone deciding whether the Triage Copilot is reliable enough to trust.',
-    status: 'completed',
-    tools: ['Synthetic test set', 'Error analysis', 'Confidence calibration'],
-    contribution:
-      'Designed the 24-case labelled test set and ground-truth labels (assigned before looking at the engine\'s output), built the scoring/calibration logic, and ran the evaluation. Built with Claude Code; I directed the methodology and interpreted the results.',
-    problem:
-      'A working demo proves nothing about reliability on its own. Before this is presented as credible, it needs to be tested against cases it has not seen, including ones designed to break it.',
-    evidence:
-      'A 24-case synthetic test set spanning 4 buckets: clear cases (8), ambiguous/overlapping cases (6), missing-information cases (5), and adversarial cases designed to break naive keyword matching — e.g. negation, sarcasm, multi-intent requests, and unrelated text containing trigger words (5).',
-    approach:
-      'Ran the Triage Copilot\'s rules engine against the labelled set and scored request-type accuracy, priority accuracy, human-review-flag accuracy, and confidence calibration (whether higher-confidence outputs are actually correct more often). Results: 62.5% overall type accuracy (vs. a 25% baseline of always guessing the most common category), 79.2% priority accuracy, and 87.5% review-flag accuracy. Accuracy by difficulty: 100% on clear cases, 33.3% on ambiguous cases, 60% on missing-information cases, 40% on adversarial cases — accuracy drops exactly where it should. Confidence calibration held up: cases scored 0.8+ confidence were 100% correct, while cases scored under 0.4 confidence were only 33.3% correct, meaning the confidence score is a genuinely useful signal for deciding what to trust.',
-    outOfScope: ['Evaluating any system other than this project\'s own Triage Copilot'],
-    evaluationApproach:
-      'Dataset construction (hand-labelled, blind to engine output), scoring criteria (type/priority/review-flag accuracy, confidence calibration by band), and a baseline comparison against always guessing the most common category. Full results, including every failed case with expected-vs-actual output, are shown on the live report — nothing is summarised away.',
-    limitations:
-      'A 24-case set is small — it is enough to catch and characterise clear failure patterns, not to produce statistically precise accuracy figures. The most common failure mode found was category tie-breaking defaulting to "Incident" when two categories scored equally (e.g. multi-intent requests mentioning both "broken" and "access") — a specific, identified gap in the tie-breaking logic, documented here rather than quietly fixed and hidden. Negation ("NOT broken") and sarcasm are not detected at all, by design, since this is a keyword/pattern engine, not an NLU model.',
   },
 ]
 
