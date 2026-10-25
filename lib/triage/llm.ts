@@ -1,12 +1,22 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { Priority, RequestType, TriageResult } from './types'
+import type { Department, IssueType, Priority, TriageResult } from './types'
 
-const VALID_TYPES: RequestType[] = [
+const VALID_DEPARTMENTS: Department[] = [
+  'Hardware',
+  'Access',
+  'Storage',
+  'Purchase',
+  'Billing',
+  'HR Support',
+  'Administrative rights',
+  'Internal Project',
+  'Miscellaneous',
+]
+const VALID_ISSUE_TYPES: IssueType[] = [
   'Incident / Something is broken',
-  'Access request',
-  'Change request',
-  'Information request',
-  'Billing / invoice query',
+  'Request / Something new is needed',
+  'Change / Modify something existing',
+  'Query / A question, no action needed',
   'Other / unclassified',
 ]
 const VALID_PRIORITIES: Priority[] = ['High', 'Medium', 'Low']
@@ -31,12 +41,12 @@ function getClient(): Anthropic | null {
 const SYSTEM_PROMPT = `You are a triage assistant for an operations team. You will be given one free-text business request.
 Classify it and respond with ONLY a single JSON object, no prose, no markdown fences, matching this exact shape:
 {
-  "requestType": one of ${JSON.stringify(VALID_TYPES)},
+  "department": one of ${JSON.stringify(VALID_DEPARTMENTS)} (which team should own this ticket),
+  "issueType": one of ${JSON.stringify(VALID_ISSUE_TYPES)} (what kind of action this needs),
   "priority": one of ${JSON.stringify(VALID_PRIORITIES)},
   "priorityRationale": short string explaining the priority,
   "extractedDetails": [{"label": string, "value": string}, ...] (key facts you can point to in the text, e.g. deadline, system named, number of people affected),
   "missingInformation": [string, ...] (what a human triager would still need to ask for),
-  "suggestedOwner": short string naming the team that should own this,
   "confidence": number between 0 and 1 reflecting how confident you are in this classification,
   "rationale": short string explaining your classification
 }
@@ -71,8 +81,11 @@ export async function runLlmTriage(text: string): Promise<TriageResult> {
     throw new LlmUnavailableError('Model did not return valid JSON.')
   }
 
-  const requestType = VALID_TYPES.includes(parsed.requestType as RequestType)
-    ? (parsed.requestType as RequestType)
+  const department = VALID_DEPARTMENTS.includes(parsed.department as Department)
+    ? (parsed.department as Department)
+    : 'Miscellaneous'
+  const issueType = VALID_ISSUE_TYPES.includes(parsed.issueType as IssueType)
+    ? (parsed.issueType as IssueType)
     : 'Other / unclassified'
   const priority = VALID_PRIORITIES.includes(parsed.priority as Priority)
     ? (parsed.priority as Priority)
@@ -89,15 +102,16 @@ export async function runLlmTriage(text: string): Promise<TriageResult> {
     : []
 
   return {
-    requestType,
-    requestTypeConfidence: confidence,
+    department,
+    departmentConfidence: confidence,
+    issueType,
+    issueTypeConfidence: confidence,
     priority,
     priorityRationale: typeof parsed.priorityRationale === 'string' ? parsed.priorityRationale : '',
     extractedDetails,
     missingInformation,
-    suggestedOwner: typeof parsed.suggestedOwner === 'string' ? parsed.suggestedOwner : 'Triage queue — needs manual routing',
     confidence,
-    needsHumanReview: confidence < 0.6 || requestType === 'Other / unclassified',
+    needsHumanReview: confidence < 0.6 || issueType === 'Other / unclassified',
     source: 'llm',
     rationale: typeof parsed.rationale === 'string' ? parsed.rationale : 'Classified by Claude.',
   }

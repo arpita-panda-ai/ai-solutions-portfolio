@@ -1,19 +1,104 @@
-import type { Priority, RequestType, TriageResult } from './types'
+import type { Department, IssueType, Priority, TriageResult } from './types'
 
-interface CategoryRule {
-  type: RequestType
-  owner: string
+interface AxisRule<T extends string> {
+  value: T
   patterns: { re: RegExp; weight: number }[]
 }
 
-const CATEGORY_RULES: CategoryRule[] = [
+// --- Department axis -------------------------------------------------------------------------
+// Keyword groups for 8 of these 9 departments were derived from a frequency/distinctiveness
+// analysis (freq_in_category / freq_overall) run across all 47,837 rows of the Kaggle "IT
+// Service Ticket Classification Dataset", grouped by its native Topic_group labels — not
+// hand-guessed. Generic words shared across departments (e.g. the bare word "access", which
+// appears constantly in Storage tickets via an automated "X wants to access Y" notification
+// template) were deliberately excluded in favour of the more distinctive technical nouns that
+// analysis surfaced, so a department isn't misclassified just because of shared boilerplate.
+// "Billing" is the one exception: the dataset has no native billing/invoice category, so this
+// department's keywords are hand-curated finance vocabulary, not dataset-derived — kept for
+// test coverage reasons, not because the dataset supports it.
+const DEPARTMENT_RULES: AxisRule<Department>[] = [
   {
-    type: 'Incident / Something is broken',
-    owner: 'IT Service Desk / Infrastructure team',
+    value: 'Hardware',
+    patterns: [
+      { re: /\b(charger|socket|laptop|monitor|printer|keyboard|mouse|screen|battery|hinges?)\b/i, weight: 2 },
+      { re: /\b(pc|device|disk|debug(ging)?|hardware)\b/i, weight: 1 },
+    ],
+  },
+  {
+    value: 'Access',
+    patterns: [
+      { re: /\b(confluence|repository|repo|git|badge|unlock|vpn)\b/i, weight: 2 },
+      { re: /\b(license|licence|credentials|password|login|log ?in)\b/i, weight: 1.5 },
+    ],
+  },
+  {
+    value: 'Storage',
+    patterns: [
+      { re: /\b(mailbox(es)?|quota|archive(d)?|file ?share)\b/i, weight: 2 },
+      { re: /\b(folder(s)?|shared drive|disk space|library)\b/i, weight: 1.5 },
+    ],
+  },
+  {
+    value: 'Purchase',
+    patterns: [
+      { re: /\b(purchase( order)?|\bpo\b|purchased|ordered|allocation)\b/i, weight: 2 },
+      { re: /\b(delivery|delivered|receipts?|replenishment)\b/i, weight: 1 },
+    ],
+  },
+  {
+    value: 'Billing',
+    patterns: [
+      { re: /\b(invoice|billing|overcharged|refund|subscription cost|charge(d)?)\b/i, weight: 2 },
+      // "payment" alone is a weaker, more generic noun (payment gateway/page/form) than the
+      // specific finance terms above — but unlike the old single-axis engine, it no longer has
+      // to compete against Incident signals (that's a separate axis now), so it can safely carry
+      // more weight here without risking a repeat of the "Payment is not working" collision.
+      { re: /\bpayment\b/i, weight: 1.5 },
+    ],
+  },
+  {
+    value: 'HR Support',
+    patterns: [
+      { re: /\b(leaver|new starter|starter form|timecard|maternity|annual leave|absence)\b/i, weight: 2 },
+      { re: /\b(onboarding|holiday|hr\b)\b/i, weight: 1 },
+    ],
+  },
+  {
+    value: 'Administrative rights',
+    patterns: [
+      { re: /\b(workstation|endpoint|windows upgrade|software center)\b/i, weight: 2 },
+      { re: /\b(outlook|upgrade(d)?|patch(ed)?|reboot(ed)?)\b/i, weight: 1 },
+    ],
+  },
+  {
+    value: 'Internal Project',
+    patterns: [
+      { re: /\b(pipeline|project code|pm role|opportunit(y|ies))\b/i, weight: 2 },
+      { re: /\bsetup form\b/i, weight: 1.5 },
+    ],
+  },
+  {
+    value: 'Miscellaneous',
+    patterns: [
+      { re: /\b(mailing list|blacklist|distribution list|ownership)\b/i, weight: 1.5 },
+    ],
+  },
+]
+
+// --- Issue type axis --------------------------------------------------------------------------
+// This axis cuts across every department (a frequency analysis of 160 hand-labelled real
+// tickets confirmed each department contains a mix of all issue types), so it has no
+// department-native vocabulary to mine. These patterns are close to the old single-axis
+// engine's category rules, with the department-specific vocabulary (invoice, access-the-noun,
+// etc.) stripped out — that vocabulary now lives in DEPARTMENT_RULES above instead.
+const ISSUE_TYPE_RULES: AxisRule<IssueType>[] = [
+  {
+    value: 'Incident / Something is broken',
     patterns: [
       { re: /\b(down|outage|crash(ed|ing)?|broken|not working|stopped working|unresponsive)\b/i, weight: 2 },
-      { re: /\b(error|bug|fail(ed|ing|s)?|exception)\b/i, weight: 1.5 },
+      { re: /\b(error|bug|fail(ed|ing|s)?|exception|issue(s)?|problem(s)?)\b/i, weight: 1.5 },
       { re: /\bcan'?t (access|log ?in|connect|load)\b/i, weight: 1 },
+      { re: /\b(unable to|cannot|can'?t)\b/i, weight: 1 },
       { re: /\b(since (yesterday|this morning|last night|\d))\b/i, weight: 0.5 },
       // "emergency" is a strong incident signal on its own, but excluded before "contact" so it
       // doesn't fire on unrelated HR/forms language like "emergency contact details" (see C8).
@@ -22,39 +107,28 @@ const CATEGORY_RULES: CategoryRule[] = [
     ],
   },
   {
-    type: 'Access request',
-    owner: 'IT Access Management / Security team',
+    value: 'Request / Something new is needed',
     patterns: [
-      { re: /\b(request|need|grant|give me)\b.{0,20}\baccess\b/i, weight: 2 },
-      { re: /\b(add (me|him|her|them) (as|to)|new account|provision)\b/i, weight: 1.5 },
+      { re: /\b(request|need|require|grant|give me)\b.{0,20}\b(access|account|license|licence)\b/i, weight: 2 },
+      { re: /\b(new (account|license|licence|user|starter)|provision|please (create|set ?up|install|grant|give|provide))\b/i, weight: 1.5 },
       { re: /\b(permission(s)?|credentials|login details)\b/i, weight: 1 },
-      { re: /\bvpn\b/i, weight: 0.5 },
     ],
   },
   {
-    type: 'Change request',
-    owner: 'Change Management / Product team',
+    value: 'Change / Modify something existing',
     patterns: [
       // Stem-based (\w*) so inflected forms like "changed"/"updated"/"configuring" actually match —
       // the original literal-word versions silently failed on anything but the bare infinitive.
-      { re: /\b(chang\w*|updat\w*|modif\w*|configur\w*|renam\w*|migrat\w*)\b/i, weight: 1.5 },
-      { re: /\bplease (updat\w*|chang\w*|add\w*|remov\w*)\b/i, weight: 1.5 },
+      { re: /\b(chang\w*|updat\w*|modif\w*|configur\w*|renam\w*|migrat\w*|postpon\w*|resched\w*)\b/i, weight: 1.5 },
+      { re: /\bplease (updat\w*|chang\w*|add\w*|remov\w*|disable\w*|close\w*|postpon\w*)\b/i, weight: 1.5 },
       { re: /\b(add (a )?(feature|field|button|option))\b/i, weight: 1 },
     ],
   },
   {
-    type: 'Information request',
-    owner: 'Business Analyst / Support team',
+    value: 'Query / A question, no action needed',
     patterns: [
       { re: /\b(can you (tell|explain|clarify)|what is|how do i|how does|wondering if|question about)\b/i, weight: 2 },
       { re: /\?\s*$/, weight: 0.5 },
-    ],
-  },
-  {
-    type: 'Billing / invoice query',
-    owner: 'Finance / Billing team',
-    patterns: [
-      { re: /\b(invoice|billing|overcharged|refund|payment|subscription cost|charge(d)?)\b/i, weight: 2 },
     ],
   },
 ]
@@ -93,8 +167,21 @@ const PRODUCT_NAME_RE = /\b(Salesforce|Jira|ServiceNow|SAP|Workday|SharePoint|Sl
 // full negation scoping. It won't catch negation several clauses away or across punctuation.
 const NEGATION_WINDOW_RE = /\b(not|isn['’]t|aren['’]t|wasn['’]t|weren['’]t|doesn['’]t|didn['’]t|never|no longer)\b[^.?!]{0,20}$/i
 
-function scoreCategories(text: string): { type: RequestType; owner: string; score: number }[] {
-  return CATEGORY_RULES.map((rule) => {
+interface AxisResult<T extends string> {
+  value: T
+  score: number
+  margin: number
+  isTie: boolean
+  tiedValues: T[]
+  confidence: number
+}
+
+// Scores and picks a winner for one classification axis (Department or Issue type),
+// independently of the other axis. A genuine tie between two or more candidates means the text
+// plausibly fits more than one — rather than silently picking whichever is listed first, this is
+// surfaced honestly via the fallback value and a deliberately low, fixed confidence (see AD3).
+function classifyAxis<T extends string>(text: string, rules: AxisRule<T>[], fallback: T): AxisResult<T> {
+  const scores = rules.map((rule) => {
     const score = rule.patterns.reduce((sum, p) => {
       const match = p.re.exec(text)
       if (!match) return sum
@@ -102,11 +189,39 @@ function scoreCategories(text: string): { type: RequestType; owner: string; scor
       if (NEGATION_WINDOW_RE.test(before)) return sum
       return sum + p.weight
     }, 0)
-    return { type: rule.type, owner: rule.owner, score }
+    return { value: rule.value, score }
   })
+  const sorted = [...scores].sort((a, b) => b.score - a.score)
+  const top = sorted[0]
+  const runnerUp = sorted[1]
+  const topScore = top?.score ?? 0
+  const margin = topScore - (runnerUp?.score ?? 0)
+
+  // A minimum score is required before committing to a category — a single weak modifier isn't
+  // enough signal on its own (see M3).
+  const MIN_CONFIDENT_SCORE = 1
+  const tiedAtTop = sorted.filter((s) => s.score === topScore)
+  const isTie = topScore > 0 && tiedAtTop.length >= 2
+  const isConfident = topScore >= MIN_CONFIDENT_SCORE && !isTie
+
+  const value = isConfident ? top.value : fallback
+  const confidence = isTie
+    ? 0.2
+    : !isConfident
+      ? 0.15
+      : Math.max(0.3, Math.min(0.95, 0.5 + margin * 0.15 + Math.min(topScore, 3) * 0.08))
+
+  return {
+    value,
+    score: topScore,
+    margin,
+    isTie,
+    tiedValues: isTie ? tiedAtTop.map((s) => s.value) : [],
+    confidence: Math.round(confidence * 100) / 100,
+  }
 }
 
-function determinePriority(text: string, requestType: RequestType): { priority: Priority; rationale: string } {
+function determinePriority(text: string, issueType: IssueType): { priority: Priority; rationale: string } {
   if (HIGH_PRIORITY_SIGNALS.some((re) => re.test(text))) {
     return { priority: 'High', rationale: 'Text contains urgency language (e.g. "urgent", "ASAP", "blocking", a same-day deadline, or mentions many users affected).' }
   }
@@ -116,7 +231,7 @@ function determinePriority(text: string, requestType: RequestType): { priority: 
   if (DEADLINE_RE.test(text)) {
     return { priority: 'Medium', rationale: 'A deadline is mentioned but no explicit urgency language, so treated as medium priority.' }
   }
-  if (requestType === 'Information request') {
+  if (issueType === 'Query / A question, no action needed') {
     return { priority: 'Low', rationale: 'A question/information request with no stated urgency defaults to low priority, since it is not blocking active work.' }
   }
   return { priority: 'Medium', rationale: 'No explicit urgency or deadline language found; defaulted to medium pending human confirmation.' }
@@ -146,7 +261,8 @@ function extractDetails(text: string): { label: string; value: string }[] {
 
 function findMissingInformation(
   text: string,
-  requestType: RequestType,
+  department: Department,
+  issueType: IssueType,
   details: { label: string }[],
   priority: Priority
 ): string[] {
@@ -160,17 +276,17 @@ function findMissingInformation(
   // Only flag "impact/urgency not stated" if urgency wasn't already established via explicit
   // high-priority language or a stated scale of impact — otherwise this duplicates that signal.
   if (
-    requestType === 'Incident / Something is broken' &&
+    issueType === 'Incident / Something is broken' &&
     priority !== 'High' &&
     !hasLabel('Deadline mentioned') &&
     !hasLabel('Scale of impact')
   ) {
     missing.push('Impact and urgency not stated — unclear how many people are affected or how time-sensitive this is.')
   }
-  if (requestType === 'Access request' && !hasLabel('System / product named')) {
+  if (issueType === 'Request / Something new is needed' && department === 'Access' && !hasLabel('System / product named')) {
     missing.push('No specific system/account named — unclear what access is actually being requested.')
   }
-  if (requestType === 'Change request' && wordCount < 20) {
+  if (issueType === 'Change / Modify something existing' && wordCount < 20) {
     missing.push('Change request lacks detail on exactly what should change and why.')
   }
 
@@ -182,13 +298,14 @@ export function runRulesTriage(rawText: string): TriageResult {
 
   if (!text) {
     return {
-      requestType: 'Other / unclassified',
-      requestTypeConfidence: 0,
+      department: 'Miscellaneous',
+      departmentConfidence: 0,
+      issueType: 'Other / unclassified',
+      issueTypeConfidence: 0,
       priority: 'Low',
       priorityRationale: 'No text provided.',
       extractedDetails: [],
       missingInformation: ['No request text was submitted.'],
-      suggestedOwner: 'Triage queue — needs manual routing',
       confidence: 0,
       needsHumanReview: true,
       source: 'rules',
@@ -196,69 +313,57 @@ export function runRulesTriage(rawText: string): TriageResult {
     }
   }
 
-  const scores = scoreCategories(text)
-  const sorted = [...scores].sort((a, b) => b.score - a.score)
-  const top = sorted[0]
-  const runnerUp = sorted[1]
+  const department = classifyAxis(text, DEPARTMENT_RULES, 'Miscellaneous')
+  const issueType = classifyAxis(text, ISSUE_TYPE_RULES, 'Other / unclassified')
 
-  const topScore = top?.score ?? 0
-  const margin = topScore - (runnerUp?.score ?? 0)
-
-  // A minimum score is required before committing to a category — a single weak modifier
-  // (e.g. just a trailing "?") isn't enough signal on its own (see M3).
-  const MIN_CONFIDENT_SCORE = 1
-  // A genuine tie between two or more categories means the message plausibly contains more
-  // than one kind of request. Rather than silently picking whichever category happens to be
-  // listed first (the previous behaviour, which biased everything toward "Incident"), this is
-  // surfaced honestly as unclassified and flagged for human disambiguation (see AD3).
-  const tiedAtTop = sorted.filter((s) => s.score === topScore).length
-  const isMultiIntentTie = topScore > 0 && tiedAtTop >= 2
   // Closure/positive-feedback language ("worked perfectly, thank you") means this is FYI, not an
   // active request — a coincidental keyword match (e.g. the noun "system update") shouldn't be
   // read as a request for that category just because the word appears (see AD1).
   const isClosureMessage = CLOSURE_RE.test(text) && !HIGH_PRIORITY_SIGNALS.some((re) => re.test(text))
-  const isConfidentMatch = topScore >= MIN_CONFIDENT_SCORE && !isMultiIntentTie && !isClosureMessage
+  if (isClosureMessage) {
+    department.value = 'Miscellaneous'
+    issueType.value = 'Other / unclassified'
+    department.confidence = Math.min(department.confidence, 0.2)
+    issueType.confidence = Math.min(issueType.confidence, 0.2)
+  }
 
-  const requestType: RequestType = isConfidentMatch ? top.type : 'Other / unclassified'
-  const owner = isConfidentMatch ? top.owner : 'Triage queue — needs manual routing'
-
-  // Confidence: scaled by absolute signal strength and how clearly it beat the next category.
-  // Multi-intent ties get a deliberately low, fixed confidence rather than the margin-based
-  // formula, since a tie is exactly the situation where the engine should not sound sure.
-  const requestTypeConfidence = isMultiIntentTie
-    ? 0.2
-    : !isConfidentMatch
-      ? 0.15
-      : Math.max(0.3, Math.min(0.95, 0.5 + margin * 0.15 + Math.min(topScore, 3) * 0.08))
-
-  const { priority, rationale: priorityRationale } = determinePriority(text, requestType)
+  const { priority, rationale: priorityRationale } = determinePriority(text, issueType.value)
   const extractedDetails = extractDetails(text)
-  const missingInformation = findMissingInformation(text, requestType, extractedDetails, priority)
-  if (isMultiIntentTie) {
+  const missingInformation = findMissingInformation(text, department.value, issueType.value, extractedDetails, priority)
+
+  if (department.isTie) {
     missingInformation.unshift(
-      'Multiple request types scored equally (e.g. mentions of more than one distinct issue or action) — a single-category rules engine cannot confidently split this; needs human disambiguation.'
+      `Multiple departments scored equally (${department.tiedValues.join(', ')}) — likely more than one topic in this message, so department was left as "Miscellaneous" rather than guessed.`
+    )
+  }
+  if (issueType.isTie) {
+    missingInformation.unshift(
+      `Multiple issue types scored equally (${issueType.tiedValues.join(', ')}) — a single-category rules engine cannot confidently split this; needs human disambiguation.`
     )
   }
 
-  const confidence = Math.max(
-    0.1,
-    requestTypeConfidence - missingInformation.length * 0.12
-  )
+  // Overall confidence is the weaker of the two axes — a mismatch on either dimension means the
+  // overall triage result shouldn't be trusted more than its least-confident part.
+  const combinedConfidence = Math.min(department.confidence, issueType.confidence)
+  const confidence = Math.max(0.1, combinedConfidence - missingInformation.length * 0.12)
   const needsHumanReview =
-    confidence < 0.6 || requestType === 'Other / unclassified' || missingInformation.length >= 3
+    confidence < 0.6 ||
+    issueType.value === 'Other / unclassified' ||
+    department.isTie ||
+    issueType.isTie ||
+    missingInformation.length >= 3
 
-  const rationale = isMultiIntentTie
-    ? `Multiple categories scored equally (${sorted.filter((s) => s.score === topScore).map((s) => s.type).join(', ')}) at ${topScore.toFixed(1)} — likely more than one request in this message, so this was left unclassified rather than guessed.`
-    : `Classified as "${requestType}" using keyword/pattern matching (top score ${topScore.toFixed(1)}, margin over next category ${margin.toFixed(1)}).`
+  const rationale = `Department classified as "${department.value}" (score ${department.score.toFixed(1)}, margin ${department.margin.toFixed(1)}). Issue type classified as "${issueType.value}" (score ${issueType.score.toFixed(1)}, margin ${issueType.margin.toFixed(1)}).`
 
   return {
-    requestType,
-    requestTypeConfidence: Math.round(requestTypeConfidence * 100) / 100,
+    department: department.value,
+    departmentConfidence: department.confidence,
+    issueType: issueType.value,
+    issueTypeConfidence: issueType.confidence,
     priority,
     priorityRationale,
     extractedDetails,
     missingInformation,
-    suggestedOwner: owner,
     confidence: Math.round(confidence * 100) / 100,
     needsHumanReview,
     source: 'rules',

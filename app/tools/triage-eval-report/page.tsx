@@ -36,14 +36,20 @@ export default function TriageEvalReport() {
         keyword matching).
       </p>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <MetricCard label="Type accuracy" value={`${report.overallTypeAccuracy}%`} />
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <MetricCard label="Department accuracy" value={`${report.overallDepartmentAccuracy}%`} />
+        <MetricCard label="Issue type accuracy" value={`${report.overallIssueTypeAccuracy}%`} />
         <MetricCard label="Priority accuracy" value={`${report.overallPriorityAccuracy}%`} />
         <MetricCard label="Review-flag accuracy" value={`${report.reviewFlagAccuracy}%`} />
         <MetricCard
-          label="Baseline"
-          value={`${report.baselineTypeAccuracy}%`}
-          sub={`Always guessing "${report.baselineType}"`}
+          label="Department baseline"
+          value={`${report.baselineDepartmentAccuracy}%`}
+          sub={`Always guessing "${report.baselineDepartment}"`}
+        />
+        <MetricCard
+          label="Issue type baseline"
+          value={`${report.baselineIssueTypeAccuracy}%`}
+          sub={`Always guessing "${report.baselineIssueType}"`}
         />
       </div>
 
@@ -59,7 +65,8 @@ export default function TriageEvalReport() {
               <tr className="border-b border-border text-xs uppercase tracking-wide text-ink-muted">
                 <th className="py-2 pr-4">Category</th>
                 <th className="py-2 pr-4">Cases</th>
-                <th className="py-2 pr-4">Type accuracy</th>
+                <th className="py-2 pr-4">Department accuracy</th>
+                <th className="py-2 pr-4">Issue type accuracy</th>
                 <th className="py-2">Priority accuracy</th>
               </tr>
             </thead>
@@ -68,7 +75,8 @@ export default function TriageEvalReport() {
                 <tr key={c.category} className="border-b border-border/60">
                   <td className="py-2 pr-4 capitalize text-ink">{c.category.replace('-', ' ')}</td>
                   <td className="py-2 pr-4 text-ink-muted">{c.count}</td>
-                  <td className="py-2 pr-4 text-ink">{c.typeAccuracy}%</td>
+                  <td className="py-2 pr-4 text-ink">{c.departmentAccuracy}%</td>
+                  <td className="py-2 pr-4 text-ink">{c.issueTypeAccuracy}%</td>
                   <td className="py-2 text-ink">{c.priorityAccuracy}%</td>
                 </tr>
               ))}
@@ -89,7 +97,7 @@ export default function TriageEvalReport() {
               <tr className="border-b border-border text-xs uppercase tracking-wide text-ink-muted">
                 <th className="py-2 pr-4">Confidence band</th>
                 <th className="py-2 pr-4">Cases</th>
-                <th className="py-2">Type accuracy</th>
+                <th className="py-2">Accuracy (department &amp; issue type both correct)</th>
               </tr>
             </thead>
             <tbody>
@@ -123,11 +131,11 @@ export default function TriageEvalReport() {
               <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <span className="text-ink-muted">Expected: </span>
-                  <span className="text-ink">{f.case.expectedType} / {f.case.expectedPriority}</span>
+                  <span className="text-ink">{f.case.expectedDepartment} / {f.case.expectedIssueType} / {f.case.expectedPriority}</span>
                 </div>
                 <div>
                   <span className="text-ink-muted">Actual: </span>
-                  <span className="text-ink">{f.actual.requestType} / {f.actual.priority} (confidence {f.actual.confidence})</span>
+                  <span className="text-ink">{f.actual.department} / {f.actual.issueType} / {f.actual.priority} (confidence {f.actual.confidence})</span>
                 </div>
               </div>
               {f.case.note && <p className="mt-2 text-xs italic text-ink-muted">{f.case.note}</p>}

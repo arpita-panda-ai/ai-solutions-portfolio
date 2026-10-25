@@ -60,6 +60,9 @@ export default async function ProjectCaseStudy({
           <Link href="/tools/triage-eval-report" className="btn-outline inline-flex">
             View the live evaluation report
           </Link>
+          <Link href="/tools/triage-real-eval-report" className="btn-outline inline-flex">
+            View the real-world evaluation report
+          </Link>
         </div>
       )}
       {project.slug === 'ai-adoption-readiness-assessment' && (

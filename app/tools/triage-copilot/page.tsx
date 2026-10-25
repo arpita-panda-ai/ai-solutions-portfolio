@@ -33,7 +33,8 @@ function ResultCard({ result, note }: { result: TriageResult; note?: string | nu
         </div>
       )}
 
-      <h3 className="mt-4 font-serif text-lg font-semibold text-ink">{result.requestType}</h3>
+      <h3 className="mt-4 font-serif text-lg font-semibold text-ink">{result.department}</h3>
+      <p className="mt-1 text-sm text-ink-muted">{result.issueType}</p>
       <p className="mt-1 text-xs text-ink-muted">{result.priorityRationale}</p>
 
       {result.needsHumanReview && (
@@ -73,8 +74,8 @@ function ResultCard({ result, note }: { result: TriageResult; note?: string | nu
 
       <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Suggested owner</p>
-          <p className="mt-1 text-ink">{result.suggestedOwner}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Routed to</p>
+          <p className="mt-1 text-ink">{result.department} team</p>
         </div>
         <div className="text-right">
           <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Confidence</p>

@@ -1,11 +1,12 @@
 import { runRulesTriage } from './rules'
 import { EVAL_DATASET, type CaseCategory, type LabeledCase } from './eval-dataset'
-import type { RequestType, TriageResult } from './types'
+import type { Department, IssueType, TriageResult } from './types'
 
 export interface CaseEvalResult {
   case: LabeledCase
   actual: TriageResult
-  typeCorrect: boolean
+  departmentCorrect: boolean
+  issueTypeCorrect: boolean
   priorityCorrect: boolean
   reviewFlagCorrect: boolean
 }
@@ -20,26 +21,33 @@ export interface ConfidenceBucket {
 export interface CategoryBreakdown {
   category: CaseCategory
   count: number
-  typeAccuracy: number
+  departmentAccuracy: number
+  issueTypeAccuracy: number
   priorityAccuracy: number
 }
 
 export interface EvaluationReport {
   totalCases: number
-  overallTypeAccuracy: number
+  overallDepartmentAccuracy: number
+  overallIssueTypeAccuracy: number
   overallPriorityAccuracy: number
   reviewFlagAccuracy: number
-  baselineTypeAccuracy: number
-  baselineType: RequestType
+  baselineDepartment: Department
+  baselineDepartmentAccuracy: number
+  baselineIssueType: IssueType
+  baselineIssueTypeAccuracy: number
   byCaseCategory: CategoryBreakdown[]
   confidenceCalibration: ConfidenceBucket[]
   caseResults: CaseEvalResult[]
   failedCases: CaseEvalResult[]
 }
 
-function mostCommon(dataset: LabeledCase[]): RequestType {
-  const counts = new Map<RequestType, number>()
-  for (const c of dataset) counts.set(c.expectedType, (counts.get(c.expectedType) ?? 0) + 1)
+function mostCommon<T extends string>(dataset: LabeledCase[], key: 'expectedDepartment' | 'expectedIssueType'): T {
+  const counts = new Map<T, number>()
+  for (const c of dataset) {
+    const value = c[key] as T
+    counts.set(value, (counts.get(value) ?? 0) + 1)
+  }
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0]
 }
 
@@ -60,20 +68,27 @@ export function runEvaluation(dataset: LabeledCase[] = EVAL_DATASET): Evaluation
     return {
       case: testCase,
       actual,
-      typeCorrect: actual.requestType === testCase.expectedType,
+      departmentCorrect: actual.department === testCase.expectedDepartment,
+      issueTypeCorrect: actual.issueType === testCase.expectedIssueType,
       priorityCorrect: actual.priority === testCase.expectedPriority,
       reviewFlagCorrect: actual.needsHumanReview === testCase.expectedNeedsReview,
     }
   })
 
   const totalCases = caseResults.length
-  const overallTypeAccuracy = pct(caseResults.filter((r) => r.typeCorrect).length, totalCases)
+  const overallDepartmentAccuracy = pct(caseResults.filter((r) => r.departmentCorrect).length, totalCases)
+  const overallIssueTypeAccuracy = pct(caseResults.filter((r) => r.issueTypeCorrect).length, totalCases)
   const overallPriorityAccuracy = pct(caseResults.filter((r) => r.priorityCorrect).length, totalCases)
   const reviewFlagAccuracy = pct(caseResults.filter((r) => r.reviewFlagCorrect).length, totalCases)
 
-  const baselineType = mostCommon(dataset)
-  const baselineTypeAccuracy = pct(
-    dataset.filter((c) => c.expectedType === baselineType).length,
+  const baselineDepartment = mostCommon<Department>(dataset, 'expectedDepartment')
+  const baselineDepartmentAccuracy = pct(
+    dataset.filter((c) => c.expectedDepartment === baselineDepartment).length,
+    totalCases
+  )
+  const baselineIssueType = mostCommon<IssueType>(dataset, 'expectedIssueType')
+  const baselineIssueTypeAccuracy = pct(
+    dataset.filter((c) => c.expectedIssueType === baselineIssueType).length,
     totalCases
   )
 
@@ -83,7 +98,8 @@ export function runEvaluation(dataset: LabeledCase[] = EVAL_DATASET): Evaluation
     return {
       category: cat,
       count: inCat.length,
-      typeAccuracy: pct(inCat.filter((r) => r.typeCorrect).length, inCat.length),
+      departmentAccuracy: pct(inCat.filter((r) => r.departmentCorrect).length, inCat.length),
+      issueTypeAccuracy: pct(inCat.filter((r) => r.issueTypeCorrect).length, inCat.length),
       priorityAccuracy: pct(inCat.filter((r) => r.priorityCorrect).length, inCat.length),
     }
   })
@@ -92,23 +108,27 @@ export function runEvaluation(dataset: LabeledCase[] = EVAL_DATASET): Evaluation
     const inBand = caseResults.filter(
       (r) => r.actual.confidence >= band.min && r.actual.confidence < band.max
     )
+    const bandCorrect = inBand.filter((r) => r.departmentCorrect && r.issueTypeCorrect)
     return {
       range: band.label,
       count: inBand.length,
-      correct: inBand.filter((r) => r.typeCorrect).length,
-      accuracy: inBand.length === 0 ? null : pct(inBand.filter((r) => r.typeCorrect).length, inBand.length),
+      correct: bandCorrect.length,
+      accuracy: inBand.length === 0 ? null : pct(bandCorrect.length, inBand.length),
     }
   })
 
-  const failedCases = caseResults.filter((r) => !r.typeCorrect || !r.priorityCorrect)
+  const failedCases = caseResults.filter((r) => !r.departmentCorrect || !r.issueTypeCorrect || !r.priorityCorrect)
 
   return {
     totalCases,
-    overallTypeAccuracy,
+    overallDepartmentAccuracy,
+    overallIssueTypeAccuracy,
     overallPriorityAccuracy,
     reviewFlagAccuracy,
-    baselineTypeAccuracy,
-    baselineType,
+    baselineDepartment,
+    baselineDepartmentAccuracy,
+    baselineIssueType,
+    baselineIssueTypeAccuracy,
     byCaseCategory,
     confidenceCalibration,
     caseResults,
