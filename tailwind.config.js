@@ -21,6 +21,13 @@ module.exports = {
           progress: '#B45309',
           concept: '#6B7280',
         },
+        navy: '#101820',
+        'navy-surface': '#1B2934',
+        mint: '#67E8B5',
+        offwhite: '#F7F8F6',
+        'offwhite-ink': '#18212B',
+        'offwhite-muted': '#667085',
+        'offwhite-border': '#E2E7E5',
       },
       fontFamily: {
         serif: ['"Source Serif 4"', 'Georgia', 'serif'],

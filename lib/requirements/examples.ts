@@ -1,4 +1,4 @@
-// Synthetic example requirements only — not real company data. Written to cover a spread of
+// Synthetic example requirements only: not real company data. Written to cover a spread of
 // cases (well-formed, vague/weasel-worded, compound, and empty) for demoing the tool.
 export const EXAMPLE_REQUIREMENTS: { label: string; text: string }[] = [
   {

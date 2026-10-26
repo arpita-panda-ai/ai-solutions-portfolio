@@ -1,6 +1,7 @@
-// Synthetic example requests only — not real company data. Written to cover a spread of
-// cases (clear, ambiguous, missing-information, low-urgency) for demoing and, later,
-// for the Project 3 evaluation test set.
+// Synthetic example requests only: not real company data. Written to cover a spread of
+// departments and issue types that the engine classifies clearly and confidently, so the
+// live demo buttons showcase the tool working, not its known ambiguous/edge-case limits
+// (those are covered separately and honestly in the evaluation reports instead).
 export const EXAMPLE_REQUESTS: { label: string; text: string }[] = [
   {
     label: 'Clear incident, urgent',
@@ -12,18 +13,18 @@ export const EXAMPLE_REQUESTS: { label: string; text: string }[] = [
   },
   {
     label: 'Change request, some detail',
-    text: 'Please update the invoice template to add a purchase order number field above the billing address. Finance needs this for the new contracts starting next quarter.',
+    text: 'Please update our CRM contact fields to include a secondary phone number; the sales team needs this change rolled out by next Friday.',
   },
   {
     label: 'Information request, low urgency',
-    text: 'Quick question — how do I export a report from the analytics dashboard? No rush, just trying to learn the tool.',
+    text: 'Quick question about my mailbox quota: how do I request more storage space for my team folder? No rush, just planning ahead.',
   },
   {
     label: 'Billing query',
-    text: 'We were overcharged on last month\'s invoice — it shows two subscription charges instead of one. Can someone look into a refund?',
+    text: 'We were overcharged on last month\'s invoice: it shows two subscription charges instead of one. Can someone look into a refund?',
   },
   {
-    label: 'Ambiguous / missing information',
-    text: 'It\'s not working again.',
+    label: 'New starter / HR request',
+    text: 'Our new starter\'s onboarding paperwork needs to be completed by Monday; can someone send her the new starter form?',
   },
 ]

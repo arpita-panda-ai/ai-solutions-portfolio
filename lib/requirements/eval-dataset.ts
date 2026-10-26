@@ -1,6 +1,6 @@
 import type { IssueType, RequirementFormat } from './types'
 
-// Synthetic, hand-labelled test set — not real company data. Ground-truth labels reflect my own
+// Synthetic, hand-labelled test set: not real company data. Ground-truth labels reflect my own
 // best-judgment reading of each requirement, assigned BEFORE looking at what the rules engine
 // actually outputs, so the evaluation is a genuine blind test rather than a tuned-to-pass one.
 export type CaseCategory = 'clear' | 'ambiguous' | 'missing-info' | 'adversarial'
@@ -14,7 +14,7 @@ export interface LabeledCase {
   expectedNeedsHumanReview: boolean
   // Issue types that must appear somewhere in the result for this case to be scored correct.
   expectedIssueTypesPresent: IssueType[]
-  // Issue types that must NOT appear — used to catch false positives, not just missed detections.
+  // Issue types that must NOT appear: used to catch false positives, not just missed detections.
   expectedIssueTypesAbsent?: IssueType[]
   note?: string
 }
@@ -78,7 +78,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedNeedsHumanReview: false,
     expectedIssueTypesPresent: ['compound-requirement'],
     expectedIssueTypesAbsent: ['missing-acceptance-criteria', 'too-brief', 'ambiguous-term'],
-    note: 'Three distinct capabilities bundled with repeated "and" — should trip the compound-requirement smell.',
+    note: 'Three distinct capabilities bundled with repeated "and": should trip the compound-requirement smell.',
   },
   {
     id: 'C6',
@@ -89,7 +89,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedNeedsHumanReview: false,
     expectedIssueTypesPresent: ['missing-benefit'],
     expectedIssueTypesAbsent: ['missing-role', 'missing-acceptance-criteria', 'ambiguous-term', 'compound-requirement'],
-    note: 'Has a role and a want, but never states "so that" — no stated benefit.',
+    note: 'Has a role and a want, but never states "so that": no stated benefit.',
   },
   {
     id: 'C7',
@@ -123,7 +123,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedHasAcceptanceCriteria: true,
     expectedNeedsHumanReview: false,
     expectedIssueTypesPresent: ['ambiguous-term', 'untestable-criterion'],
-    note: 'Quality score lands exactly on the 70 boundary — tests the needsHumanReview threshold is inclusive/exclusive as designed, not just issue detection.',
+    note: 'Quality score lands exactly on the 70 boundary: tests the needsHumanReview threshold is inclusive/exclusive as designed, not just issue detection.',
   },
   {
     id: 'A2',
@@ -134,7 +134,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedNeedsHumanReview: false,
     expectedIssueTypesPresent: ['ambiguous-term'],
     expectedIssueTypesAbsent: ['untestable-criterion', 'missing-acceptance-criteria'],
-    note: 'Gherkin-structured AC lines are always treated as testable regardless of content — a disclosed engine assumption, not a bug.',
+    note: 'Gherkin-structured AC lines are always treated as testable regardless of content, a disclosed engine assumption, not a bug.',
   },
   {
     id: 'A3',
@@ -145,7 +145,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedNeedsHumanReview: true,
     expectedIssueTypesPresent: ['missing-acceptance-criteria', 'missing-benefit'],
     expectedIssueTypesAbsent: ['missing-role'],
-    note: 'Contains both "I want" and "shall" language; user-story detection takes priority by design — tests format-detection precedence on mixed-signal text.',
+    note: 'Contains both "I want" and "shall" language; user-story detection takes priority by design: tests format-detection precedence on mixed-signal text.',
   },
 
   // --- Missing-information cases: too vague or fragmentary to assess meaningfully ---
@@ -175,7 +175,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedHasAcceptanceCriteria: false,
     expectedNeedsHumanReview: true,
     expectedIssueTypesPresent: ['too-brief', 'missing-acceptance-criteria'],
-    note: "Incomplete user-story fragment (no 'I want') is not recognized as user-story format at all — a disclosed limitation of keyword-based format detection.",
+    note: "Incomplete user-story fragment (no 'I want') is not recognized as user-story format at all, a disclosed limitation of keyword-based format detection.",
   },
   {
     id: 'M4',
@@ -186,7 +186,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedNeedsHumanReview: true,
     expectedIssueTypesPresent: ['too-brief', 'missing-acceptance-criteria'],
     expectedIssueTypesAbsent: ['ambiguous-term'],
-    note: "'better' is vague but not in the curated ambiguous-term list — a disclosed coverage gap, not a bug.",
+    note: "'better' is vague but not in the curated ambiguous-term list, a disclosed coverage gap, not a bug.",
   },
 
   // --- Adversarial cases: designed to break naive pattern matching ---
@@ -198,7 +198,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedHasAcceptanceCriteria: false,
     expectedNeedsHumanReview: true,
     expectedIssueTypesPresent: ['missing-acceptance-criteria'],
-    note: "Heading 'Acceptance Criteria:' present but followed by no actual content — tests that the engine isn't fooled by the heading alone.",
+    note: "Heading 'Acceptance Criteria:' present but followed by no actual content: tests that the engine isn't fooled by the heading alone.",
   },
   {
     id: 'AD2',
@@ -209,7 +209,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedNeedsHumanReview: true,
     expectedIssueTypesPresent: ['missing-acceptance-criteria'],
     expectedIssueTypesAbsent: ['compound-requirement', 'ambiguous-term'],
-    note: 'Ordinary prose that happens to start with "When" — tests that a single line is never mistaken for a real Gherkin acceptance-criteria block (that misdetection was caught and fixed during this evaluation).',
+    note: 'Ordinary prose that happens to start with "When": tests that a single line is never mistaken for a real Gherkin acceptance-criteria block (that misdetection was caught and fixed during this evaluation).',
   },
   {
     id: 'AD3',
@@ -219,7 +219,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedHasAcceptanceCriteria: true,
     expectedNeedsHumanReview: false,
     expectedIssueTypesPresent: ['compound-requirement'],
-    note: 'Legitimately well-specified multi-locale requirement still trips the compound-requirement heuristic purely on "and" count — a disclosed precision limitation (it is a smell detector, not a semantic parser).',
+    note: 'Legitimately well-specified multi-locale requirement still trips the compound-requirement heuristic purely on "and" count, a disclosed precision limitation (it is a smell detector, not a semantic parser).',
   },
   {
     id: 'AD4',

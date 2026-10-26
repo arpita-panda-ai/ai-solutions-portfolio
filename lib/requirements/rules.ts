@@ -6,7 +6,7 @@ import type {
 } from './types'
 
 // A curated subset of the classic "ambiguous words" lists used in real requirements-engineering
-// checklists (e.g. INCOSE's Guide for Writing Requirements, NASA's requirements guidance) — terms
+// checklists (e.g. INCOSE's Guide for Writing Requirements, NASA's requirements guidance), terms
 // that sound specific but are not independently testable without a stakeholder defining them.
 const AMBIGUOUS_TERMS: { term: string; re: RegExp }[] = [
   { term: 'user-friendly', re: /\buser[- ]friendly\b/i },
@@ -93,7 +93,7 @@ function splitStoryAndAcceptanceCriteria(text: string): { mainText: string; acLi
   const firstStructuredIndex = lines.findIndex(
     (l) => GHERKIN_LINE_RE.test(l) || BULLET_LINE_RE.test(l)
   )
-  // Require at least two lines before trusting the bullet/Gherkin heuristic — a single line of
+  // Require at least two lines before trusting the bullet/Gherkin heuristic: a single line of
   // ordinary prose that happens to start with "When"/"Given" is not a real acceptance-criteria
   // block, and splitting on it would swallow the whole requirement and hide it from every other check.
   if (firstStructuredIndex === -1 || lines.length < 2) {
@@ -132,13 +132,13 @@ function buildSuggestedQuestions(issues: RequirementIssue[]): string[] {
         add('What are the specific, testable conditions that define this as done?')
         break
       case 'untestable-criterion':
-        add(`How would someone verify "${issue.excerpt}" without judgement calls — what number, state, or exact outcome applies?`)
+        add(`How would someone verify "${issue.excerpt}" without judgement calls: what number, state, or exact outcome applies?`)
         break
       case 'missing-role':
         add('Who, specifically, is the user/role this is written for?')
         break
       case 'missing-benefit':
-        add('Why does the user want this — what is the underlying benefit or goal?')
+        add('Why does the user want this: what is the underlying benefit or goal?')
         break
       case 'too-brief':
         add('Can you expand this into a full requirement with context, scope and acceptance criteria?')
@@ -176,7 +176,7 @@ export function runRequirementsQA(rawText: string): RequirementAnalysisResult {
     issues.push({
       type: 'too-brief',
       severity: 'blocker',
-      message: 'Too little text to assess meaningfully — this reads as a fragment, not a complete requirement.',
+      message: 'Too little text to assess meaningfully; this reads as a fragment, not a complete requirement.',
     })
   }
 
@@ -184,7 +184,7 @@ export function runRequirementsQA(rawText: string): RequirementAnalysisResult {
     issues.push({
       type: 'ambiguous-term',
       severity: 'warning',
-      message: `"${excerpt}" is subjective and not independently testable — ask the stakeholder for a specific, measurable definition.`,
+      message: `"${excerpt}" is subjective and not independently testable: ask the stakeholder for a specific, measurable definition.`,
       excerpt,
     })
   }
@@ -194,7 +194,7 @@ export function runRequirementsQA(rawText: string): RequirementAnalysisResult {
     issues.push({
       type: 'compound-requirement',
       severity: 'warning',
-      message: 'This requirement may bundle multiple distinct capabilities in one sentence (multiple "and"s) — consider splitting so each can be estimated and tested independently.',
+      message: 'This requirement may bundle multiple distinct capabilities in one sentence (multiple "and"s): consider splitting so each can be estimated and tested independently.',
     })
   }
 
@@ -206,7 +206,7 @@ export function runRequirementsQA(rawText: string): RequirementAnalysisResult {
     issues.push({
       type: 'missing-acceptance-criteria',
       severity: 'blocker',
-      message: 'No acceptance criteria found — this cannot be verified as "done" without specific, testable conditions.',
+      message: 'No acceptance criteria found: this cannot be verified as "done" without specific, testable conditions.',
     })
   } else {
     for (const line of cleanedAcLines) {
@@ -216,7 +216,7 @@ export function runRequirementsQA(rawText: string): RequirementAnalysisResult {
         issues.push({
           type: 'untestable-criterion',
           severity: 'warning',
-          message: 'This acceptance criterion has no concrete, measurable condition — it reads as a judgement call rather than a pass/fail check.',
+          message: 'This acceptance criterion has no concrete, measurable condition; it reads as a judgement call rather than a pass/fail check.',
           excerpt: line.replace(BULLET_LINE_RE, '').trim(),
         })
       }
@@ -228,14 +228,14 @@ export function runRequirementsQA(rawText: string): RequirementAnalysisResult {
       issues.push({
         type: 'missing-role',
         severity: 'warning',
-        message: 'No "As a [role]" clause found — unclear who this requirement is actually for.',
+        message: 'No "As a [role]" clause found: unclear who this requirement is actually for.',
       })
     }
     if (!USER_STORY_BENEFIT_RE.test(mainText)) {
       issues.push({
         type: 'missing-benefit',
         severity: 'warning',
-        message: 'No "so that [benefit]" clause found — a reviewer can\'t judge priority or trade-offs without knowing the underlying goal.',
+        message: 'No "so that [benefit]" clause found: a reviewer can\'t judge priority or trade-offs without knowing the underlying goal.',
       })
     }
   }

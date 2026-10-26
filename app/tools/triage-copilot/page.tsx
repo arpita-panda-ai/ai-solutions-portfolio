@@ -132,7 +132,7 @@ export default function TriageCopilotTool() {
       <h1 className="mt-4 font-serif text-3xl font-semibold text-ink sm:text-4xl">Try the Triage Copilot</h1>
       <p className="mt-3 text-sm leading-relaxed text-ink-muted">
         Paste a free-text request below, or load one of the synthetic examples. The rules-based
-        engine always runs. You can optionally also run it through Claude for comparison — this
+        engine always runs. You can optionally also run it through Claude for comparison; this
         demo caps the number of AI calls to keep cost under control, and falls back to the
         rules-based result if the cap is hit or no API key is configured.
       </p>

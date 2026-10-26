@@ -8,13 +8,13 @@ export const metadata: Metadata = {
 const CONTACT = {
   email: 'arpita.panda.work@gmail.com',
   linkedin: 'https://www.linkedin.com/in/itsarpitapanda',
-  github: 'https://github.com/alllthatmattersbiz-sys',
+  github: 'https://github.com/arpita-panda-ai',
 }
 
 const links = [
   { label: 'Email', value: CONTACT.email, href: `mailto:${CONTACT.email}`, icon: Mail },
   { label: 'LinkedIn', value: 'linkedin.com/in/itsarpitapanda', href: CONTACT.linkedin, icon: Linkedin },
-  { label: 'GitHub', value: 'github.com/alllthatmattersbiz-sys', href: CONTACT.github, icon: Github },
+  { label: 'GitHub', value: 'github.com/arpita-panda-ai', href: CONTACT.github, icon: Github },
 ]
 
 export default function ContactPage() {

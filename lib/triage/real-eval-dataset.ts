@@ -1,12 +1,12 @@
 import type { Department, IssueType } from './types'
 
 // Real-world evaluation set, sourced from a public Kaggle dataset of actual (anonymised) IT
-// service desk tickets — not synthetic text. See REAL_WORLD_SOURCE below for provenance,
+// service desk tickets, not synthetic text. See REAL_WORLD_SOURCE below for provenance,
 // licensing and sampling method. Ground-truth labels here were assigned by hand, reading each
 // ticket's actual text (not just trusting the source dataset's own category), BEFORE looking at
-// what the rules engine outputs — a genuine blind test, same discipline as the synthetic set.
+// what the rules engine outputs, a genuine blind test, same discipline as the synthetic set.
 //
-// expectedDepartment defaults to the dataset's own "Topic_group" (sourceCategory) — that native
+// expectedDepartment defaults to the dataset's own "Topic_group" (sourceCategory): that native
 // label is generally trustworthy since it reflects how the business actually routed the ticket.
 // expectedIssueType has no native equivalent and is hand-labelled fresh under the new rubric.
 export interface RealWorldCase {
@@ -25,9 +25,9 @@ export const REAL_WORLD_SOURCE = {
   totalRows: 47837,
   sampleSize: 40,
   samplingMethod:
-    'Stratified random sample (seed 42), 5 tickets from each of the dataset\'s 8 "Topic_group" categories. Earlier passes of this evaluation excluded "HR Support" (10,915 of the 47,837 rows) because it had no analog in this engine\'s old single-axis request-type schema. Once the engine moved to an independent Department × Issue type model, Department became a straightforward match against all 8 native categories, so HR Support was added back in — these are RW36–RW40 below.',
+    'Stratified random sample (seed 42), 5 tickets from each of the dataset\'s 8 "Topic_group" categories: 40 cases in total. The first version of this evaluation sampled 35 cases across only 7 categories, excluding "HR Support" (10,915 of the 47,837 rows), because it had no analog in this engine\'s old single-axis request-type schema. Once the engine moved to an independent Department × Issue type model, Department became a straightforward match against all 8 native categories, so HR Support was added back in as a full 5-ticket stratum: these are RW36–RW40 below. Figures on this page are for the current, 40-case, 8-category version only; they are not directly comparable to any 35-case figure quoted elsewhere.',
   preprocessingCaveat:
-    'The publisher has already lowercased this text, stripped punctuation, removed stopwords and likely lemmatised it. That erases most of the multi-word phrases, punctuation and function words (negation, question marks) that this engine\'s priority logic depends on — so this real-world set is used for Department and Issue-type accuracy only. Priority accuracy continues to be measured on the synthetic set, where casing, punctuation and full phrasing are intact.',
+    'The publisher has already lowercased this text, stripped punctuation, removed stopwords and likely lemmatised it. That erases most of the multi-word phrases, punctuation and function words (negation, question marks) that this engine\'s priority logic depends on; so this real-world set is used for Department and Issue-type accuracy only. Priority accuracy continues to be measured on the synthetic set, where casing, punctuation and full phrasing are intact.',
 }
 
 export const REAL_WORLD_DATASET: RealWorldCase[] = [
@@ -45,7 +45,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'laptop charger charger forgot charger kind regards',
     expectedDepartment: 'Hardware',
     expectedIssueType: 'Request / Something new is needed',
-    note: 'Heavily stripped fragment — reads as asking for a replacement charger, i.e. something new is needed, not a modification to an existing setup.',
+    note: 'Heavily stripped fragment: reads as asking for a replacement charger, i.e. something new is needed, not a modification to an existing setup.',
   },
   {
     id: 'RW3',
@@ -68,7 +68,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'fields project wednesday february pm re hi call story points type number available issue types story epic thank wednesday february hello please note administrator rights both confluence too until everything order afterwards rights attached please take regarding user story please more afraid understa',
     expectedDepartment: 'Hardware',
     expectedIssueType: 'Other / unclassified',
-    note: 'Garbled, multi-topic, truncated — no single confident issue type despite the native Hardware label.',
+    note: 'Garbled, multi-topic, truncated: no single confident issue type despite the native Hardware label.',
   },
 
   // --- Access ---
@@ -117,7 +117,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'manager change error failed with errors manager change for hello va ale administration officer sent tuesday november failed with errors manager change for access task application failed with errors manager change for change layout one column two columns two columns narrow left two columns narrow rig',
     expectedDepartment: 'Miscellaneous',
     expectedIssueType: 'Incident / Something is broken',
-    note: 'A change process that "failed with errors" — the error is the primary signal, not the change itself.',
+    note: 'A change process that "failed with errors": the error is the primary signal, not the change itself.',
   },
   {
     id: 'RW12',
@@ -125,7 +125,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'change issue for sent monday july change line manager for hello requested through change current line manager for around weeks ago change yet reflected could you please help solve best regards line manager bogota',
     expectedDepartment: 'Miscellaneous',
     expectedIssueType: 'Incident / Something is broken',
-    note: 'A previously requested change has not taken effect — reads as a problem to resolve, not a new change ask.',
+    note: 'A previously requested change has not taken effect: reads as a problem to resolve, not a new change ask.',
   },
   {
     id: 'RW13',
@@ -158,7 +158,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'new purchase po friday december pm purchase po dear purchased please log installation administrator',
     expectedDepartment: 'Purchase',
     expectedIssueType: 'Other / unclassified',
-    note: 'Routine purchase-order logging — an administrative notice rather than a clean Incident/Request/Change/Query.',
+    note: 'Routine purchase-order logging, an administrative notice rather than a clean Incident/Request/Change/Query.',
   },
   {
     id: 'RW17',
@@ -188,7 +188,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'allocation new purchase po july pm purchase po dear purchased please log allocation please take consideration mandatory receipts section order receive item ordered how video please explorer kind regards administrator',
     expectedDepartment: 'Purchase',
     expectedIssueType: 'Other / unclassified',
-    note: 'Same reasoning as RW18 — receipts/order-receive language, but still the routine PO-logging template, not a billing dispute.',
+    note: 'Same reasoning as RW18: receipts/order-receive language, but still the routine PO-logging template, not a billing dispute.',
   },
 
   // --- Administrative rights ---
@@ -227,7 +227,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'windows upgrade not enough space on partition upgrade started hello could you please help with below afraid have access delete any temp files aware have any use also have any personal files thanks sent monday re upgrade started hello please or but can also advise you following purge browsers history',
     expectedDepartment: 'Administrative rights',
     expectedIssueType: 'Incident / Something is broken',
-    note: 'Upgrade blocked by insufficient disk space — a problem blocking progress, not primarily an access or change ask.',
+    note: 'Upgrade blocked by insufficient disk space, a problem blocking progress, not primarily an access or change ask.',
   },
 
   // --- Storage ---
@@ -237,7 +237,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'wants to access thursday july pm wants because accept decline',
     expectedDepartment: 'Storage',
     expectedIssueType: 'Other / unclassified',
-    note: 'Too fragmented to confidently label despite the surface word "access". This is the auto-generated SharePoint access-notification template ("wants to access... accept/decline") — deliberately not keyed on, since "wants"/"decline" are corpus-specific noise, not generalizable English signal.',
+    note: 'Too fragmented to confidently label despite the surface word "access". This is the auto-generated SharePoint access-notification template ("wants to access... accept/decline"), deliberately not keyed on, since "wants"/"decline" are corpus-specific noise, not generalizable English signal.',
   },
   {
     id: 'RW27',
@@ -269,7 +269,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'mailboxes tuesday july please delete mine gone enough feel important required kind regards planning officer infrastructure upcoming holiday wednesday july friday july inclusive please consider environment print',
     expectedDepartment: 'Storage',
     expectedIssueType: 'Change / Modify something existing',
-    note: 'Request to delete a mailbox — modifying/removing something existing.',
+    note: 'Request to delete a mailbox: modifying/removing something existing.',
   },
 
   // --- Internal Project ---
@@ -279,7 +279,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'new project code form pas thursday july pm re awaiting response code form thank add attached forms please let senior date wednesday july awaiting response code form hello please find form attached thanks kind regards analyst ext wednesday july pm re awaiting response code form hi sorry hub currently',
     expectedDepartment: 'Internal Project',
     expectedIssueType: 'Request / Something new is needed',
-    note: 'Setting up a brand-new project code — something new is needed, not a modification to an existing one.',
+    note: 'Setting up a brand-new project code: something new is needed, not a modification to an existing one.',
   },
   {
     id: 'RW32',
@@ -312,7 +312,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     expectedIssueType: 'Request / Something new is needed',
   },
 
-  // --- HR Support (added once the engine moved to an independent Department axis — see
+  // --- HR Support (added once the engine moved to an independent Department axis, see
   // REAL_WORLD_SOURCE.samplingMethod) ---
   {
     id: 'RW36',
@@ -320,7 +320,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'access to network december pm hello working floor connect order virtual machine machine id machine number please add user ecosystem senior developer next annual leave november december',
     expectedDepartment: 'HR Support',
     expectedIssueType: 'Request / Something new is needed',
-    note: 'Native category is HR Support (mentions the requester\'s own upcoming annual leave), even though the surface ask ("please add user", "access to network") reads like Access vocabulary — a genuine cross-department ambiguity in the native labels, not a labelling error on our part.',
+    note: 'Native category is HR Support (mentions the requester\'s own upcoming annual leave), even though the surface ask ("please add user", "access to network") reads like Access vocabulary, a genuine cross-department ambiguity in the native labels, not a labelling error on our part.',
   },
   {
     id: 'RW37',
@@ -328,7 +328,7 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'accounts needed for web automation workshops internship tuesday accounts needed automation workshops internship dear organizing few automation workshops interns prerequisite each created provided workshop starting therefore accounts ready by possible persons require please let provide further details thanks senior test lead',
     expectedDepartment: 'HR Support',
     expectedIssueType: 'Request / Something new is needed',
-    note: 'Provisioning accounts for a batch of interns — an HR-driven onboarding request.',
+    note: 'Provisioning accounts for a batch of interns: an HR-driven onboarding request.',
   },
   {
     id: 'RW38',
@@ -352,6 +352,6 @@ export const REAL_WORLD_DATASET: RealWorldCase[] = [
     text: 'error on installing net framework friday march pm error installing framework hello help please framework installation tried install error code thank engineer',
     expectedDepartment: 'HR Support',
     expectedIssueType: 'Incident / Something is broken',
-    note: 'Native category is HR Support, but the text itself is a plain software installation error with zero HR-specific vocabulary — included deliberately as a reminder that native dataset categories reflect who the ticket was routed to in practice, not always what vocabulary the text contains.',
+    note: 'Native category is HR Support, but the text itself is a plain software installation error with zero HR-specific vocabulary, included deliberately as a reminder that native dataset categories reflect who the ticket was routed to in practice, not always what vocabulary the text contains.',
   },
 ]

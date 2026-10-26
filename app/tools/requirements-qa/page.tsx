@@ -136,7 +136,7 @@ export default function RequirementsQaTool() {
       <p className="mt-3 text-sm leading-relaxed text-ink-muted">
         Paste a user story or requirement below, or load one of the synthetic examples. The
         rules-based engine checks for ambiguous language, missing or untestable acceptance
-        criteria, and incomplete user-story structure — then suggests clarifying questions a
+        criteria, and incomplete user-story structure, then suggests clarifying questions a
         business analyst could ask the stakeholder.
       </p>
 

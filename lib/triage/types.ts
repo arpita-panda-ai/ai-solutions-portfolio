@@ -1,7 +1,7 @@
 // Two independent classification axes, reflecting a real ITSM-style ticket model (e.g.
 // ServiceNow's Category + Ticket Type): WHO should own the ticket (Department) and WHAT KIND
 // of action it needs (Issue type). These are scored independently because a dataset analysis
-// showed every department contains a mix of all issue types — collapsing them into one list
+// showed every department contains a mix of all issue types: collapsing them into one list
 // (the old `RequestType`) conflated topic with action and caused avoidable misclassifications.
 export type Department =
   | 'Hardware'

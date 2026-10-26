@@ -14,7 +14,7 @@ export default function AboutPage() {
           I'm an AI Solutions Analyst with around five years of experience across AI solutions,
           business analysis, process improvement and enterprise technology. My work sits at the
           intersection of business problem framing, AI solution design, product thinking and
-          delivery — understanding what a team actually needs before reaching for an AI solution,
+          delivery: understanding what a team actually needs before reaching for an AI solution,
           and staying involved through requirements, prototyping and evaluation.
         </p>
         <p>
@@ -26,8 +26,8 @@ export default function AboutPage() {
         </p>
         <p>
           Before that, I worked as a Business Analyst in the renewable energy and consumer solar
-          sector — requirements gathering, go-to-market analysis and commercially-informed
-          decision-making — and earlier still in enterprise IT, software configuration and
+          sector (requirements gathering, go-to-market analysis and commercially-informed
+          decision-making), and earlier still in enterprise IT, software configuration and
           workflow automation, focused on process improvement and operational efficiency.
         </p>
         <p>
@@ -37,7 +37,7 @@ export default function AboutPage() {
         <p>
           The projects on this site are independent work, built outside of and separate from any
           employer's confidential projects, using synthetic data and public evidence. I use tools
-          including Claude Code to help build them — my contribution is in the problem framing,
+          including Claude Code to help build them: my contribution is in the problem framing,
           requirements, architecture and product decisions, directing implementation, and
           evaluating the result, not in manually writing every line of code.
         </p>

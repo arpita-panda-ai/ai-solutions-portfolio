@@ -14,7 +14,7 @@ export default function ProjectsPage() {
       <p className="mt-4 max-w-2xl text-ink-muted">
         Three independent projects, each demonstrating a different part of the problem-to-solution
         journey: a working application, a product opportunity case study, and an evaluation study.
-        Status is labelled accurately — nothing here is presented as finished unless it is.
+        Status is labelled accurately: nothing here is presented as finished unless it is.
       </p>
 
       <div className="mt-12 space-y-6">

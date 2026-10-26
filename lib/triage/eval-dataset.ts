@@ -1,12 +1,12 @@
 import type { Department, IssueType, Priority } from './types'
 
-// Synthetic, hand-labelled test set — not real company data. Ground-truth labels reflect my
+// Synthetic, hand-labelled test set: not real company data. Ground-truth labels reflect my
 // own best-judgment reading of each request, assigned BEFORE looking at what the rules engine
 // actually outputs, so the evaluation is a genuine blind test rather than a tuned-to-pass one.
 //
 // Relabelled for the two-axis (Department + Issue type) schema. A few cases that were
 // genuinely ambiguous under the old single-axis model turned out to resolve cleanly once split
-// into two independent axes (see AD6) — that's called out below where it applies.
+// into two independent axes (see AD6); that's called out below where it applies.
 export type CaseCategory = 'clear' | 'ambiguous' | 'missing-info' | 'adversarial'
 
 export interface LabeledCase {
@@ -30,7 +30,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedIssueType: 'Incident / Something is broken',
     expectedPriority: 'High',
     expectedNeedsReview: false,
-    note: 'No department fits perfectly — it is a business system, not literally a login/access tool — but "cannot log in" makes Access the closest department match.',
+    note: 'No department fits perfectly: it is a business system, not literally a login/access tool, but "cannot log in" makes Access the closest department match.',
   },
   {
     id: 'C2',
@@ -53,7 +53,7 @@ export const EVAL_DATASET: LabeledCase[] = [
   {
     id: 'C4',
     caseCategory: 'clear',
-    text: 'Quick question — how do I export a report from the analytics dashboard? No rush, just trying to learn the tool.',
+    text: 'Quick question: how do I export a report from the analytics dashboard? No rush, just trying to learn the tool.',
     expectedDepartment: 'Miscellaneous',
     expectedIssueType: 'Query / A question, no action needed',
     expectedPriority: 'Low',
@@ -62,7 +62,7 @@ export const EVAL_DATASET: LabeledCase[] = [
   {
     id: 'C5',
     caseCategory: 'clear',
-    text: "We were overcharged on last month's invoice — it shows two subscription charges instead of one. Can someone look into a refund?",
+    text: "We were overcharged on last month's invoice: it shows two subscription charges instead of one. Can someone look into a refund?",
     expectedDepartment: 'Billing',
     expectedIssueType: 'Incident / Something is broken',
     expectedPriority: 'Medium',
@@ -105,7 +105,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedIssueType: 'Request / Something new is needed',
     expectedPriority: 'Medium',
     expectedNeedsReview: true,
-    note: 'Issue type overlaps Incident ("broken") and Request ("need access") — primary ask is access.',
+    note: 'Issue type overlaps Incident ("broken") and Request ("need access"); primary ask is access.',
   },
   {
     id: 'A2',
@@ -155,7 +155,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedIssueType: 'Request / Something new is needed',
     expectedPriority: 'Medium',
     expectedNeedsReview: true,
-    note: 'Issue type overlaps Request and Change — the message explicitly offers two possible resolutions.',
+    note: 'Issue type overlaps Request and Change: the message explicitly offers two possible resolutions.',
   },
 
   // --- Missing-information cases: too vague to triage confidently ---
@@ -214,7 +214,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedIssueType: 'Other / unclassified',
     expectedPriority: 'Low',
     expectedNeedsReview: true,
-    note: "Negation defeats naive keyword matching on 'broken' — this is positive feedback, not an incident.",
+    note: "Negation defeats naive keyword matching on 'broken'; this is positive feedback, not an incident.",
   },
   {
     id: 'AD2',
@@ -234,7 +234,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedIssueType: 'Other / unclassified',
     expectedPriority: 'High',
     expectedNeedsReview: true,
-    note: 'Genuinely two requests in one message, each pointing at a different department (Access vs Billing) and a different issue type (Request vs Incident) — multi-intent is explicitly out of scope for a v1 rules engine, so both axes tie and fall back rather than guessing.',
+    note: 'Genuinely two requests in one message, each pointing at a different department (Access vs Billing) and a different issue type (Request vs Incident); multi-intent is explicitly out of scope for a v1 rules engine, so both axes tie and fall back rather than guessing.',
   },
   {
     id: 'AD4',
@@ -254,7 +254,7 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedIssueType: 'Other / unclassified',
     expectedPriority: 'Low',
     expectedNeedsReview: true,
-    note: "'Urgent' and 'critical' appear in an unrelated context — tests false-positive triggering on surface keywords.",
+    note: "'Urgent' and 'critical' appear in an unrelated context: tests false-positive triggering on surface keywords.",
   },
   {
     id: 'AD6',
@@ -264,6 +264,6 @@ export const EVAL_DATASET: LabeledCase[] = [
     expectedIssueType: 'Incident / Something is broken',
     expectedPriority: 'Medium',
     expectedNeedsReview: false,
-    note: 'Found via live user testing: under the old single-axis engine, "payment" doubled as a bare Billing keyword that tied against Incident\'s "not working", leaving this wrongly unclassified. Splitting Department and Issue type into independent axes resolves this structurally, not just by patching keyword weights — "payment" only has to compete against other departments (none fire here), and "not working" only has to compete against other issue types (none fire here), so both axes now resolve confidently with no cross-axis collision possible.',
+    note: 'Found via live user testing: under the old single-axis engine, "payment" doubled as a bare Billing keyword that tied against Incident\'s "not working", leaving this wrongly unclassified. Splitting Department and Issue type into independent axes resolves this structurally, not just by patching keyword weights: "payment" only has to compete against other departments (none fire here), and "not working" only has to compete against other issue types (none fire here), so both axes now resolve confidently with no cross-axis collision possible.',
   },
 ]

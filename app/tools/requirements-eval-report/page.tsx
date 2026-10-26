@@ -25,16 +25,16 @@ export default function RequirementsEvalReport() {
         ← Back to case study
       </Link>
       <h1 className="mt-4 font-serif text-3xl font-semibold text-ink sm:text-4xl">
-        Requirements QA — evaluation report
+        Requirements QA: evaluation report
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-ink-muted">
         These numbers are computed live by actually running the rules-based engine against a{' '}
-        {report.totalCases}-case synthetic, hand-labelled test set every time this page loads —
+        {report.totalCases}-case synthetic, hand-labelled test set every time this page loads;
         nothing here is a pasted-in or invented figure. Ground-truth labels were assigned by
         tracing the engine&apos;s own logic against each case, split across four buckets: clear,
         ambiguous, missing-information, and adversarial (designed to break naive pattern
         matching). One adversarial case (AD2) found a genuine false-positive bug in acceptance-
-        criteria detection during this process, which was fixed before these numbers were taken —
+        criteria detection during this process, which was fixed before these numbers were taken;
         see Limitations on the case study page for what remains.
       </p>
 
@@ -103,7 +103,7 @@ export default function RequirementsEvalReport() {
                 <tr key={b.range} className="border-b border-border/60">
                   <td className="py-2 pr-4 text-ink">{b.range}</td>
                   <td className="py-2 pr-4 text-ink-muted">{b.count}</td>
-                  <td className="py-2 text-ink">{b.accuracy === null ? '—' : `${b.accuracy}%`}</td>
+                  <td className="py-2 text-ink">{b.accuracy === null ? 'N/A' : `${b.accuracy}%`}</td>
                 </tr>
               ))}
             </tbody>

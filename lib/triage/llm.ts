@@ -58,7 +58,7 @@ export async function runLlmTriage(text: string): Promise<TriageResult> {
     throw new LlmUnavailableError('ANTHROPIC_API_KEY is not configured.')
   }
   if (callCount >= MAX_CALLS_PER_PROCESS) {
-    throw new LlmUnavailableError('Demo cost cap reached for this server instance — falling back to rules-based triage.')
+    throw new LlmUnavailableError('Demo cost cap reached for this server instance, falling back to rules-based triage.')
   }
   callCount += 1
 

@@ -8,13 +8,13 @@ interface AxisRule<T extends string> {
 // --- Department axis -------------------------------------------------------------------------
 // Keyword groups for 8 of these 9 departments were derived from a frequency/distinctiveness
 // analysis (freq_in_category / freq_overall) run across all 47,837 rows of the Kaggle "IT
-// Service Ticket Classification Dataset", grouped by its native Topic_group labels — not
+// Service Ticket Classification Dataset", grouped by its native Topic_group labels, not
 // hand-guessed. Generic words shared across departments (e.g. the bare word "access", which
 // appears constantly in Storage tickets via an automated "X wants to access Y" notification
 // template) were deliberately excluded in favour of the more distinctive technical nouns that
 // analysis surfaced, so a department isn't misclassified just because of shared boilerplate.
 // "Billing" is the one exception: the dataset has no native billing/invoice category, so this
-// department's keywords are hand-curated finance vocabulary, not dataset-derived — kept for
+// department's keywords are hand-curated finance vocabulary, not dataset-derived, kept for
 // test coverage reasons, not because the dataset supports it.
 const DEPARTMENT_RULES: AxisRule<Department>[] = [
   {
@@ -27,8 +27,16 @@ const DEPARTMENT_RULES: AxisRule<Department>[] = [
   {
     value: 'Access',
     patterns: [
-      { re: /\b(confluence|repository|repo|git|badge|unlock|vpn)\b/i, weight: 2 },
+      // CRM/ERP added in iteration 2: named business systems are as distinctive a signal as
+      // confluence/vpn, unlike the bare generic word "access" (see comment above on why that
+      // word was excluded in the first place).
+      { re: /\b(confluence|repository|repo|git|badge|unlock|vpn|crm|erp)\b/i, weight: 2 },
       { re: /\b(license|licence|credentials|password|login|log ?in)\b/i, weight: 1.5 },
+      // The fuller phrase "access to the ... system" is specific enough to avoid the boilerplate
+      // collision that excluding the bare word "access" was meant to prevent, and gives a named
+      // system (e.g. "the CRM system") enough combined weight to beat unrelated department
+      // signals that happen to co-occur in the same message (see C2 in the eval report).
+      { re: /\baccess to the\b.{0,20}\bsystem\b/i, weight: 1 },
     ],
   },
   {
@@ -50,7 +58,7 @@ const DEPARTMENT_RULES: AxisRule<Department>[] = [
     patterns: [
       { re: /\b(invoice|billing|overcharged|refund|subscription cost|charge(d)?)\b/i, weight: 2 },
       // "payment" alone is a weaker, more generic noun (payment gateway/page/form) than the
-      // specific finance terms above — but unlike the old single-axis engine, it no longer has
+      // specific finance terms above, but unlike the old single-axis engine, it no longer has
       // to compete against Incident signals (that's a separate axis now), so it can safely carry
       // more weight here without risking a repeat of the "Payment is not working" collision.
       { re: /\bpayment\b/i, weight: 1.5 },
@@ -90,7 +98,7 @@ const DEPARTMENT_RULES: AxisRule<Department>[] = [
 // tickets confirmed each department contains a mix of all issue types), so it has no
 // department-native vocabulary to mine. These patterns are close to the old single-axis
 // engine's category rules, with the department-specific vocabulary (invoice, access-the-noun,
-// etc.) stripped out — that vocabulary now lives in DEPARTMENT_RULES above instead.
+// etc.) stripped out; that vocabulary now lives in DEPARTMENT_RULES above instead.
 const ISSUE_TYPE_RULES: AxisRule<IssueType>[] = [
   {
     value: 'Incident / Something is broken',
@@ -104,6 +112,11 @@ const ISSUE_TYPE_RULES: AxisRule<IssueType>[] = [
       // doesn't fire on unrelated HR/forms language like "emergency contact details" (see C8).
       { re: /\bemergency\b(?!\s+contact)/i, weight: 2 },
       { re: /\bfix(e[ds]|ing)?\b/i, weight: 1 },
+      // Added in iteration 2: billing-specific "something went wrong" language (overcharged,
+      // double charged) wasn't covered by any Incident signal, so it fell through to
+      // "unclassified" even though it's clearly reporting a problem, not asking a question
+      // (see C5 and A5 in the eval report).
+      { re: /\b(overcharged|double charged|charged (twice|again)|wrongly charged)\b/i, weight: 2 },
     ],
   },
   {
@@ -117,7 +130,7 @@ const ISSUE_TYPE_RULES: AxisRule<IssueType>[] = [
   {
     value: 'Change / Modify something existing',
     patterns: [
-      // Stem-based (\w*) so inflected forms like "changed"/"updated"/"configuring" actually match —
+      // Stem-based (\w*) so inflected forms like "changed"/"updated"/"configuring" actually match;
       // the original literal-word versions silently failed on anything but the bare infinitive.
       { re: /\b(chang\w*|updat\w*|modif\w*|configur\w*|renam\w*|migrat\w*|postpon\w*|resched\w*)\b/i, weight: 1.5 },
       { re: /\bplease (updat\w*|chang\w*|add\w*|remov\w*|disable\w*|close\w*|postpon\w*)\b/i, weight: 1.5 },
@@ -146,7 +159,7 @@ const HIGH_PRIORITY_SIGNALS = [
   /\bby (today|this morning|end of day|eod)\b/i,
 ]
 
-// Positive-closure language ("it worked, thanks") signals this isn't an open request at all —
+// Positive-closure language ("it worked, thanks") signals this isn't an open request at all;
 // used both to force low priority and (below) to stop a coincidental keyword match (e.g. the
 // noun "system update") from being read as an active request for that category.
 const CLOSURE_RE = /\b(worked (perfectly|great|well|fine)|all (good|sorted)|resolved now|fixed now)\b/i
@@ -163,7 +176,7 @@ const SYSTEM_RE = /\b(the|our|my)\s+([A-Z][\w-]*(?:\s[A-Z][\w-]*)?|[a-z]+)\s+(sy
 const PRODUCT_NAME_RE = /\b(Salesforce|Jira|ServiceNow|SAP|Workday|SharePoint|Slack|Zendesk|Confluence|Okta|AWS|Azure|CRM|ERP|VPN)\b/
 
 // Treats a keyword match as void if it's directly negated a few words earlier in the same clause
-// (e.g. "NOT broken") — a lightweight, generalisable mitigation for naive keyword matching, not
+// (e.g. "NOT broken"), a lightweight, generalisable mitigation for naive keyword matching, not
 // full negation scoping. It won't catch negation several clauses away or across punctuation.
 const NEGATION_WINDOW_RE = /\b(not|isn['’]t|aren['’]t|wasn['’]t|weren['’]t|doesn['’]t|didn['’]t|never|no longer)\b[^.?!]{0,20}$/i
 
@@ -178,7 +191,7 @@ interface AxisResult<T extends string> {
 
 // Scores and picks a winner for one classification axis (Department or Issue type),
 // independently of the other axis. A genuine tie between two or more candidates means the text
-// plausibly fits more than one — rather than silently picking whichever is listed first, this is
+// plausibly fits more than one, rather than silently picking whichever is listed first, this is
 // surfaced honestly via the fallback value and a deliberately low, fixed confidence (see AD3).
 function classifyAxis<T extends string>(text: string, rules: AxisRule<T>[], fallback: T): AxisResult<T> {
   const scores = rules.map((rule) => {
@@ -197,7 +210,7 @@ function classifyAxis<T extends string>(text: string, rules: AxisRule<T>[], fall
   const topScore = top?.score ?? 0
   const margin = topScore - (runnerUp?.score ?? 0)
 
-  // A minimum score is required before committing to a category — a single weak modifier isn't
+  // A minimum score is required before committing to a category: a single weak modifier isn't
   // enough signal on its own (see M3).
   const MIN_CONFIDENT_SCORE = 1
   const tiedAtTop = sorted.filter((s) => s.score === topScore)
@@ -270,21 +283,21 @@ function findMissingInformation(
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length
   const hasLabel = (label: string) => details.some((d) => d.label === label)
 
-  if (wordCount < 12) missing.push('Request is very brief — may be missing context the requester has in mind but did not write down.')
+  if (wordCount < 12) missing.push('Request is very brief: may be missing context the requester has in mind but did not write down.')
   if (!hasLabel('Contact email found')) missing.push('No contact/requester identity found in the text.')
 
   // Only flag "impact/urgency not stated" if urgency wasn't already established via explicit
-  // high-priority language or a stated scale of impact — otherwise this duplicates that signal.
+  // high-priority language or a stated scale of impact; otherwise this duplicates that signal.
   if (
     issueType === 'Incident / Something is broken' &&
     priority !== 'High' &&
     !hasLabel('Deadline mentioned') &&
     !hasLabel('Scale of impact')
   ) {
-    missing.push('Impact and urgency not stated — unclear how many people are affected or how time-sensitive this is.')
+    missing.push('Impact and urgency not stated: unclear how many people are affected or how time-sensitive this is.')
   }
   if (issueType === 'Request / Something new is needed' && department === 'Access' && !hasLabel('System / product named')) {
-    missing.push('No specific system/account named — unclear what access is actually being requested.')
+    missing.push('No specific system/account named: unclear what access is actually being requested.')
   }
   if (issueType === 'Change / Modify something existing' && wordCount < 20) {
     missing.push('Change request lacks detail on exactly what should change and why.')
@@ -317,7 +330,7 @@ export function runRulesTriage(rawText: string): TriageResult {
   const issueType = classifyAxis(text, ISSUE_TYPE_RULES, 'Other / unclassified')
 
   // Closure/positive-feedback language ("worked perfectly, thank you") means this is FYI, not an
-  // active request — a coincidental keyword match (e.g. the noun "system update") shouldn't be
+  // active request, a coincidental keyword match (e.g. the noun "system update") shouldn't be
   // read as a request for that category just because the word appears (see AD1).
   const isClosureMessage = CLOSURE_RE.test(text) && !HIGH_PRIORITY_SIGNALS.some((re) => re.test(text))
   if (isClosureMessage) {
@@ -333,16 +346,16 @@ export function runRulesTriage(rawText: string): TriageResult {
 
   if (department.isTie) {
     missingInformation.unshift(
-      `Multiple departments scored equally (${department.tiedValues.join(', ')}) — likely more than one topic in this message, so department was left as "Miscellaneous" rather than guessed.`
+      `Multiple departments scored equally (${department.tiedValues.join(', ')}): likely more than one topic in this message, so department was left as "Miscellaneous" rather than guessed.`
     )
   }
   if (issueType.isTie) {
     missingInformation.unshift(
-      `Multiple issue types scored equally (${issueType.tiedValues.join(', ')}) — a single-category rules engine cannot confidently split this; needs human disambiguation.`
+      `Multiple issue types scored equally (${issueType.tiedValues.join(', ')}): a single-category rules engine cannot confidently split this; needs human disambiguation.`
     )
   }
 
-  // Overall confidence is the weaker of the two axes — a mismatch on either dimension means the
+  // Overall confidence is the weaker of the two axes: a mismatch on either dimension means the
   // overall triage result shouldn't be trusted more than its least-confident part.
   const combinedConfidence = Math.min(department.confidence, issueType.confidence)
   const confidence = Math.max(0.1, combinedConfidence - missingInformation.length * 0.12)
