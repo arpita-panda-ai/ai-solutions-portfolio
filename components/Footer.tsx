@@ -18,6 +18,14 @@ export default function Footer() {
 
           <div className="flex gap-6 text-sm">
             <a
+              href="/Arpita-Panda-CV.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-offwhite-muted hover:text-offwhite-ink"
+            >
+              CV
+            </a>
+            <a
               href={CONTACT.linkedin}
               target="_blank"
               rel="noopener noreferrer"
